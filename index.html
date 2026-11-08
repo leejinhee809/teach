@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ebe5fc" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#24233a" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="수업내용">
+<title>수업내용</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/favicon-64.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f4fb; --surface:#ffffff; --surface2:#f3f0fa; --text:#2a2640; --muted:#7c7794; --line:#e7e2f3;
+  --head:#ebe5fc; --head-text:#2a2640; --chip:rgba(124,107,214,.12);
+  --ink:#7c6bd6; --ink-text:#ffffff; --hi:#d9f2e8; --hi-text:#1f4a3b;
+  --ret:#d0517f; --ret-weak:#fdeaf1; --on-ret:#ffffff; --warn:#c07a2c; --warn-weak:#fff1e2;
+  --p1:#3f86c7; --p1-weak:#e6f1fb; --p2:#a8801e; --p2-weak:#fbf3dc;
+  --shadow:0 2px 10px rgba(80,60,160,.06);
+  --nav-h:62px;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#18192a; --surface:#222338; --surface2:#2b2c44; --text:#eceaf6; --muted:#a9a7c4; --line:#36385a;
+    --head:#24233a; --head-text:#eceaf6; --chip:rgba(255,255,255,.07);
+    --ink:#c3b5ff; --ink-text:#1f1b35; --hi:#b8ead6; --hi-text:#173a2e;
+    --ret:#f7a8c4; --ret-weak:rgba(247,168,196,.13); --on-ret:#331523; --warn:#f8cc9a; --warn-weak:rgba(248,204,154,.13);
+    --p1:#9fd0f7; --p1-weak:rgba(159,208,247,.13); --p2:#f5dc9a; --p2-weak:rgba(245,220,154,.13);
+    --shadow:none;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#18192a; --surface:#222338; --surface2:#2b2c44; --text:#eceaf6; --muted:#a9a7c4; --line:#36385a;
+  --head:#24233a; --head-text:#eceaf6; --chip:rgba(255,255,255,.07);
+  --ink:#c3b5ff; --ink-text:#1f1b35; --hi:#b8ead6; --hi-text:#173a2e;
+  --ret:#f7a8c4; --ret-weak:rgba(247,168,196,.13); --on-ret:#331523; --warn:#f8cc9a; --warn-weak:rgba(248,204,154,.13);
+  --p1:#9fd0f7; --p1-weak:rgba(159,208,247,.13); --p2:#f5dc9a; --p2-weak:rgba(245,220,154,.13);
+  --shadow:none;
+  color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"IBM Plex Sans KR","Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;font-size:16px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--head)}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--p1);outline-offset:2px}
+
+/* ── 상단 ── */
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--head);color:var(--head-text);padding:10px 14px;border-bottom:1px solid var(--line)}
+.hrow{display:flex;align-items:center;justify-content:space-between;gap:8px;max-width:640px;margin:0 auto}
+.brand{font-weight:700;font-size:17px;white-space:nowrap;display:flex;align-items:center;gap:8px}
+.logo{width:30px;height:30px;border-radius:9px;background:#fff;flex:none;box-shadow:0 0 0 1px var(--line)}
+.term{display:flex;align-items:center;gap:6px}
+.ysel{display:flex;align-items:center;background:var(--chip);border-radius:14px}
+.ysel button{background:none;border:0;color:inherit;width:40px;height:40px;font-size:20px}
+.ysel span{font-weight:700;min-width:58px;text-align:center}
+.seg{display:flex;background:var(--chip);border-radius:14px;padding:3px}
+.seg button{border:0;background:none;color:inherit;padding:7px 10px;border-radius:9px;opacity:.75;font-size:14px}
+.seg button.on{background:var(--ink);color:var(--ink-text);opacity:1;font-weight:700}
+.seg[hidden]{display:none}
+
+/* ── 하단 탭 ── */
+nav{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{flex:1;height:var(--nav-h);background:none;border:0;color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:12px}
+nav button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+nav button.on{color:var(--ink);font-weight:700}
+nav button.on svg{stroke-width:2.2}
+
+main{max-width:640px;margin:0 auto;padding:12px 10px calc(var(--nav-h) + 28px)}
+
+/* ── 공통 ── */
+.totals{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:10px}
+.totals div{background:var(--surface);padding:8px 4px;text-align:center}
+.totals small{display:block;color:var(--muted);font-size:11.5px}
+.totals b{font-size:17px}
+.totals .r b{color:var(--ret)}
+.caption{font-size:13px;color:var(--muted);margin:0 2px 6px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.btn{border:1px solid var(--line);background:var(--surface);padding:10px 14px;border-radius:11px;min-height:44px}
+.btn.primary{background:var(--ink);color:var(--ink-text);border-color:var(--ink);font-weight:700}
+.btn.danger{color:var(--ret)}
+.btn.full{width:100%}
+.link{background:none;border:0;color:var(--p1);padding:8px 0;font-size:14px;min-height:40px}
+input,select{background:var(--surface2);border:1px solid var(--line);border-radius:9px;padding:9px 10px;width:100%;min-width:0;font-size:16px;min-height:42px}
+
+/* ── 입력 카드 ── */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);margin-bottom:12px;overflow:hidden}
+.card-head{width:100%;display:flex;align-items:center;gap:8px;padding:12px 14px;border:0;background:none;text-align:left}
+.card-head h2{margin:0;font-size:17px;flex:1}
+.card-total{font-size:12.5px;color:var(--muted);text-align:right;line-height:1.3}
+.card-total b{color:var(--ret);font-size:14px}
+.chev{width:20px;height:20px;flex:none;transition:transform .2s;stroke:var(--muted);fill:none;stroke-width:2}
+.card.closed .chev{transform:rotate(-90deg)}
+.card.closed .card-body{display:none}
+.semblock{border-top:1px solid var(--line)}
+.semhead{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:var(--surface2);font-size:14px}
+.semhead b{font-size:15px}
+.semhead span{color:var(--muted);font-size:12.5px}
+.semhead span em{font-style:normal;color:var(--ret);font-weight:700}
+.part{padding:8px 12px 2px 12px;border-left:4px solid var(--p1)}
+.part.p2{border-left-color:var(--p2);border-top:1px dashed var(--line)}
+.plabel{display:inline-block;font-size:12px;font-weight:700;padding:1px 9px;border-radius:20px;background:var(--p1-weak);color:var(--p1);margin-bottom:5px}
+.p2 .plabel{background:var(--p2-weak);color:var(--p2)}
+.row{padding:2px 0 8px}
+.row + .row{border-top:1px dotted var(--line);padding-top:8px}
+.tline{display:flex;gap:6px}
+input.title{font-weight:500}
+.icon{border:1px solid var(--line);background:var(--surface);border-radius:9px;width:42px;flex:none;font-size:20px;color:var(--muted)}
+.nums{display:grid;grid-template-columns:1.2fr .9fr .9fr 1fr;gap:5px;margin-top:5px;align-items:end}
+.nums label span,.ret span{display:block;font-size:11px;color:var(--muted);margin-bottom:1px;white-space:nowrap}
+.nums input{text-align:right;padding:8px 7px}
+.ret{background:var(--ret-weak);border-radius:9px;padding:3px 7px;text-align:right;min-height:42px;display:flex;flex-direction:column;justify-content:center}
+.ret span{margin:0;color:var(--ret);opacity:.8}
+.ret b{font-size:18px;color:var(--ret);line-height:1.1}
+.ret small{display:block;font-size:10.5px;color:var(--ret);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ret.neg{background:var(--warn-weak)}
+.ret.neg b,.ret.neg small,.ret.neg span{color:var(--warn)}
+
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:16px;padding:22px 16px;text-align:center;color:var(--muted)}
+.addform{display:flex;gap:8px;margin-top:12px}
+.addform input{flex:1}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:14px;margin-bottom:12px}
+.panel h3{margin:0 0 4px;font-size:16px}
+.panel p{margin:0 0 10px;color:var(--muted);font-size:13.5px}
+.slist{list-style:none;margin:10px 0 0;padding:0}
+.slist li{display:flex;align-items:center;gap:6px;padding:8px 0;border-top:1px solid var(--line)}
+.slist li input{flex:1}
+.slist li.arch input{opacity:.5;text-decoration:line-through}
+.sm{border:1px solid var(--line);background:var(--surface2);border-radius:9px;padding:8px 9px;font-size:13px;flex:none;min-height:40px}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:13.5px}
+th,td{padding:8px 9px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{background:var(--surface2);color:var(--muted);font-weight:500}
+td.l,th.l{text-align:left}
+td.rq{color:var(--ret);font-weight:700}
+tr.sum td{font-weight:700;background:var(--surface2)}
+.tag{font-size:11px;font-weight:700;padding:1px 7px;border-radius:20px}
+.tag.p1{background:var(--p1-weak);color:var(--p1)}
+.tag.p2{background:var(--p2-weak);color:var(--p2)}
+.hist{list-style:none;margin:0;padding:0}
+.hist li{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-top:1px solid var(--line);gap:8px;font-size:14px}
+.hist li:first-child{border-top:0}
+.hist b.r{color:var(--ret)}
+textarea{width:100%;min-height:130px;background:var(--surface2);border:1px solid var(--line);border-radius:9px;padding:10px;font-size:13px;font-family:ui-monospace,Menlo,Consolas,monospace}
+
+/* ── 수업 내용 표 ── */
+.htable{table-layout:fixed;min-width:0;font-size:14px}
+.htable col.c-yr{width:84px}
+.htable col.c-sem{width:50px}
+.htable th,.htable td{white-space:normal;word-break:keep-all;overflow-wrap:anywhere;text-align:left;vertical-align:top;padding:8px 7px}
+.htable th.hy,.htable td.hy{text-align:center;vertical-align:middle;font-weight:700;background:var(--surface2);border-right:1px solid var(--line)}
+.htable td.sem{font-weight:500;color:var(--muted);white-space:nowrap}
+.htable tr.s1 td{border-bottom:1px dashed var(--line)}
+.htable tr.s2 td,.htable td.hy{border-bottom:2px solid var(--line)}
+.htable tbody tr:last-child td{border-bottom:0}
+.none{color:var(--muted)}
+.dup{display:inline-block;font-size:11px;font-weight:700;padding:0 6px;border-radius:20px;background:var(--warn-weak);color:var(--warn);margin-left:4px}
+.freq{list-style:none;margin:0;padding:0}
+.freq li{padding:8px 0;border-top:1px solid var(--line)}
+.freq li:first-child{border-top:0}
+.freq small{color:var(--muted)}
+
+.toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + 14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:var(--text);color:var(--bg);padding:9px 16px;border-radius:20px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:20;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.err{background:var(--ret);color:var(--on-ret)}
+@media (max-width:360px){
+  .brand{font-size:14px}
+  .nums{grid-template-columns:1fr 1fr 1fr}
+  .ret{grid-column:1 / -1;flex-direction:row;justify-content:space-between;align-items:center;min-height:0;padding:6px 10px}
+}
+@media (prefers-reduced-motion:reduce){.toast,.chev{transition:none}}
+
+.bigsum{background:var(--hi);color:var(--hi-text);border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.bigsum small{opacity:.8;font-size:13px}
+.bigsum b{font-size:22px;letter-spacing:-.01em}
+.filter{margin-bottom:10px}
+.phead{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.phead .plabel{margin:0}
+.phead .sp{flex:1}
+.pbtn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:4px 10px;font-size:12.5px;min-height:32px;color:var(--muted)}
+.pbtn.del{color:var(--ret)}
+.part.off{padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--muted);font-size:14px;background:var(--surface2)}
+.card-total .q{color:var(--text);font-weight:700}
+.datapanel .toolbar{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:0}
+.datapanel .btn{padding:10px 6px}
+.gbadge{border:1px dashed var(--line);background:var(--surface);border-radius:20px;padding:1px 9px;font-size:12px;font-weight:700;color:var(--muted);min-height:26px;white-space:nowrap}
+.gbadge.set{border-style:solid;border-color:transparent;background:var(--ink);color:var(--ink-text)}
+.hy .yg{display:block;width:100%;margin-top:5px;border:1px dashed var(--line);background:var(--surface);border-radius:7px;padding:2px 3px;font-size:11px;font-weight:500;line-height:1.3;color:var(--muted);white-space:nowrap}
+.hy .yg.set{border-style:solid;color:var(--text)}
+.hy .yg b{font-weight:700}
+.hy .yg.p1 b{color:var(--p1)} .hy .yg.p2 b{color:var(--p2)}
+.cohort{border-top:1px solid var(--line);padding:9px 0}
+.cohort:first-of-type{border-top:0}
+.cohort h4{margin:0 0 3px;font-size:14.5px}
+.cohort h4 small{color:var(--muted);font-weight:500}
+.cohort.now{background:var(--surface2);margin:0 -14px;padding:9px 14px;border-radius:0 0 14px 14px}
+.cohort .ln{font-size:14px;padding-left:2px}
+.cohort .ln span{color:var(--muted);display:inline-block;min-width:42px}
+.gctl{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.glist{list-style:none;margin:0;padding:0}
+.glist li{padding:8px 0;border-top:1px solid var(--line)}
+.glist li:first-child{border-top:0}
+.glist small{display:block;color:var(--muted);font-size:12.5px}
+.sheet{position:fixed;inset:0;z-index:30;background:rgba(10,14,25,.45);display:flex;align-items:flex-end;justify-content:center}
+.sheet[hidden]{display:none}
+.sheet .box{background:var(--surface);width:100%;max-width:520px;border-radius:18px 18px 0 0;padding:18px 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.sheet h3{margin:0 0 4px;font-size:17px}
+.sheet p{margin:0 0 14px;color:var(--muted);font-size:13.5px}
+.grange{display:grid;grid-template-columns:1fr auto 1fr auto;gap:8px;align-items:center;margin-bottom:16px;font-size:16px}
+.grange select{font-size:18px;font-weight:700;text-align:center;min-height:50px}
+.sheet .acts{display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:8px}
+.rowx{display:flex;gap:14px;flex-wrap:wrap;margin-top:2px}
+.rowx .link{padding:4px 0;min-height:32px;font-size:13px}
+.mv{display:flex;align-items:center;gap:6px;font-size:13px;margin-top:5px;padding:5px 8px;border-radius:8px;background:var(--p1-weak);color:var(--text)}
+.mv.in{background:var(--p2-weak)}
+.mv.lost{background:var(--warn-weak);color:var(--warn)}
+.mv .t{flex:1;line-height:1.35}
+.mv .t small{color:var(--muted)}
+.mv button{border:0;background:none;color:var(--muted);font-size:18px;width:30px;height:30px;flex:none}
+.memo{margin-top:5px;font-size:14px;min-height:38px;background:var(--surface)}
+.sheet .fld{display:block;margin-bottom:10px}
+.sheet .fld span{display:block;font-size:12.5px;color:var(--muted);margin-bottom:3px}
+.sheet .two{display:grid;grid-template-columns:1.4fr 1fr;gap:8px}
+.sheet .acts2{display:grid;grid-template-columns:1fr 1.4fr;gap:8px;margin-top:6px}
+.nums input.fx{font-size:12.5px;letter-spacing:-.03em;color:var(--p1);font-weight:700;padding-left:4px;padding-right:5px}
+.nums.wide{grid-template-columns:.95fr 1.75fr .75fr .95fr}
+@media (max-width:360px){ .nums.wide{grid-template-columns:.9fr 1.8fr .8fr} }
+.stable{min-width:0;font-size:12.5px;table-layout:fixed}
+.stable col.c-n{width:12%} .stable col.c-m{width:19%} .stable col.c-a{width:23%}
+.stable th,.stable td{text-align:center;vertical-align:middle;padding:7px 3px;white-space:normal;word-break:keep-all;overflow-wrap:anywhere}
+.stable td.nm{text-align:left;padding-left:8px}
+.stable td.nm b{font-size:13px}
+.stable td.nm .tag{margin-left:2px}
+.stable td.nm small,.stable td.am small{display:block;color:var(--muted);font-size:11px;line-height:1.3}
+.stable td.mv2{font-size:11.5px;line-height:1.35;white-space:nowrap}
+.stable .mo{color:var(--ret)} .stable .mi{color:var(--p1)}
+.stable td.am{line-height:1.3;white-space:nowrap}
+.stable tr.sum td{font-size:12.5px}
+.btn.dangerfill{background:var(--ret);color:var(--on-ret);border-color:var(--ret);font-weight:700}
+#askMsg{white-space:pre-line;color:var(--text);font-size:15px;margin-bottom:14px}
+#askIn{margin-bottom:14px}
+.slist li .yrs{flex:none;font-size:12px;color:var(--muted);white-space:nowrap}
+.rec{list-style:none;margin:0;padding:0}
+.rec li{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:9px 0;border-top:1px solid var(--line)}
+.rec li:first-child{border-top:0}
+.rec li b{font-size:15px}
+.rec li .r{text-align:right;font-size:13.5px;white-space:nowrap}
+.rec li .r em{font-style:normal;font-weight:700;color:var(--ink)}
+.rec small{display:block;color:var(--muted);font-size:12px}
+.nbtag{display:inline-block;font-size:11px;font-weight:700;padding:0 7px;border-radius:20px;background:var(--surface2);color:var(--muted);border:1px solid var(--line);margin-left:4px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<header>
+  <div class="hrow">
+    <div class="brand"><img class="logo" src="icons/favicon-64.png" alt="" width="30" height="30">수업내용</div>
+    <div class="term">
+      <div class="ysel"><button id="yPrev" aria-label="이전 해">‹</button><span id="yLabel"></span><button id="yNext" aria-label="다음 해">›</button></div>
+      <div class="seg" id="semSeg"><button data-sem="1">1학기</button><button data-sem="2">2학기</button></div>
+    </div>
+  </div>
+</header>
+<main id="main"></main>
+<nav id="tabs">
+  <button data-view="input"><svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13 7l4 4"/></svg>주문내역</button>
+  <button data-view="summary"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 10h8M8 14h8M8 18h5"/></svg>정리</button>
+  <button data-view="history"><svg viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3V4z"/><path d="M5 17a3 3 0 013-3h11"/></svg>수업 내용</button>
+  <button data-view="schools"><svg viewBox="0 0 24 24"><path d="M3 10l9-6 9 6"/><path d="M5 10v9h14v-9"/><path d="M10 19v-5h4v5"/></svg>학교</button>
+</nav>
+<input type="file" id="fileIn" accept=".json,application/json" class="vh" tabindex="-1" aria-hidden="true">
+<div class="sheet" id="gradeSheet" hidden>
+  <div class="box" role="dialog" aria-modal="true" aria-labelledby="gsTitle">
+    <h3 id="gsTitle">학년 선택</h3>
+    <p>1학기·2학기 공통이에요. 한 학년만 가르치면 오른쪽은 비워 두세요.</p>
+    <div class="grange">
+      <select id="gFrom" aria-label="시작 학년"></select><span>~</span>
+      <select id="gTo" aria-label="끝 학년"></select><span>학년</span>
+    </div>
+    <div class="acts">
+      <button class="btn danger" data-act="gclear">지우기</button>
+      <button class="btn" data-act="gcancel">취소</button>
+      <button class="btn primary" data-act="gsave">저장</button>
+    </div>
+  </div>
+</div>
+<div class="sheet" id="moveSheet" hidden>
+  <div class="box" role="dialog" aria-modal="true" aria-labelledby="mvTitle">
+    <h3 id="mvTitle">다른 학교로 이동</h3>
+    <p id="mvSub"></p>
+    <div class="two">
+      <label class="fld"><span>받는 학교</span><select id="mvTo"></select></label>
+      <label class="fld"><span>받는 반</span><select id="mvPart"><option value="p1">1부</option><option value="p2">2부</option></select></label>
+    </div>
+    <div class="two">
+      <label class="fld"><span>이동 수량</span><input id="mvQty" type="text" inputmode="numeric" placeholder="예: 3"></label>
+      <label class="fld"><span>날짜</span><input id="mvDate" type="date"></label>
+    </div>
+    <label class="fld"><span>메모 (선택)</span><input id="mvNote" placeholder="예: 교동 인원 증가로 이동"></label>
+    <div class="acts2">
+      <button class="btn" data-act="mvcancel">취소</button>
+      <button class="btn primary" data-act="mvsave">이동 저장</button>
+    </div>
+  </div>
+</div>
+<div class="sheet" id="askSheet" hidden>
+  <div class="box" role="alertdialog" aria-modal="true" aria-labelledby="askMsg">
+    <p id="askMsg"></p>
+    <input id="askIn" hidden>
+    <div class="acts2"><button class="btn" id="askCancel">취소</button><button class="btn primary" id="askOk">확인</button></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== 저장소 (기존 데이터 그대로 사용) ===== */
+const KEY = 'textbook-return-v1';
+const $ = s => document.querySelector(s);
+let state = load();
+let cur = loadCur();
+
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(raw){ const d = JSON.parse(raw); if(d && Array.isArray(d.schools) && d.terms) return d; }
+  }catch(e){}
+  return { schools: [], terms: {} };
+}
+function loadCur(){
+  let c = null;
+  try{ c = JSON.parse(localStorage.getItem(KEY+'-cur')); }catch(e){}
+  const now = new Date();
+  c = c && c.year ? c : { year: now.getFullYear(), sem: now.getMonth() >= 7 ? 2 : 1, view: 'input' };
+  if(c.view === 'backup') c.view = 'input';
+  c.closed = c.closed || {};
+  c.fs = c.fs || 'all';
+  return c;
+}
+let saveTimer;
+function save(quiet){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>{
+    try{
+      localStorage.setItem(KEY, JSON.stringify(state));
+      localStorage.setItem(KEY+'-cur', JSON.stringify(cur));
+      if(!quiet) toast('저장했어요');
+    }catch(e){ toast('저장하지 못했어요. 맨 아래 백업 버튼으로 파일을 저장해 두세요', true); }
+  }, 300);
+}
+
+/* ===== 유틸 ===== */
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+const n = v => { const x = parseInt(String(v ?? '').replace(/[^0-9-]/g,''), 10); return isNaN(x) ? 0 : x; };
+const won = v => Number(v || 0).toLocaleString('ko-KR');            // 1234567 → 1,234,567
+const fmtIn = v => { const d = String(v ?? '').replace(/[^0-9]/g,''); return d ? won(+d) : ''; };
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const blank = () => ({ title:'', price:'', order:'', quote:'' });
+const tKey = (y=cur.year, s=cur.sem) => `${y}-${s}`;
+const prevKey = () => cur.sem === 2 ? tKey(cur.year,1) : tKey(cur.year-1,2);
+const PARTS = [['p1','1부'],['p2','2부']];
+const SEMS = [1,2];
+
+function sd(sid, key=tKey()){
+  const t = state.terms[key] || (state.terms[key] = {});
+  if(!t[sid]) t[sid] = { p1:[blank()], p2:[blank()] };
+  const d = t[sid]; d.off = d.off || {}; d.names = d.names || {};
+  if(!d.p1 || !d.p1.length) d.p1 = [blank()];
+  if(!d.p2 || !d.p2.length) d.p2 = [blank()];
+  return d;
+}
+const pname = (d,p,def) => (d && d.names && d.names[p]) || def;
+const isOff = (d,p) => !!(d && d.off && d.off[p]);
+// 학년은 학기 구분 없이 "학교 × 년도 × 부" 단위로 저장: state.yg[년도][학교id][p1|p2] = [1,2]
+function ygOf(sid,y){ state.yg = state.yg || {}; const Y = state.yg[y] || (state.yg[y] = {}); return Y[sid] || (Y[sid] = {}); }
+const gradesOf = (sid,y,p) => state.yg?.[y]?.[sid]?.[p] || [];
+// [1,2] → "1~2학년", [3] → "3학년", [1,3] → "1·3학년"
+function gradeText(g){
+  if(!g.length) return '학년 +';
+  const consecutive = g.every((x,i) => i === 0 || x === g[i-1] + 1);
+  return (g.length > 1 && consecutive ? `${g[0]}~${g[g.length-1]}` : g.join('·')) + '학년';
+}
+// "1,2" "1-3" "1~2" "12" 모두 학년 목록으로 바꿈
+function parseGrades(v){
+  const out = new Set(); const t = String(v||'');
+  t.replace(/([1-6])\s*[-~]\s*([1-6])/g, (m,a,b) => { for(let i=Math.min(a,b); i<=Math.max(a,b); i++) out.add(i); return ''; })
+   .replace(/[1-6]/g, m => { out.add(+m); return ''; });
+  return [...out].sort((a,b) => a-b);
+}
+function gradeBtn(sid,y,p,label){ const g = gradesOf(sid,y,p);
+  return `<button class="${label ? 'yg ' + p : 'gbadge'} ${g.length?'set':''}" data-act="grade" data-y="${y}" data-sid="${sid}" data-part="${p}" aria-label="${y}년 학년 입력">${label ? `<b>${label}</b> ` : ''}${gradeText(g)}</button>`; }
+// 예전 버전(학기별 학년) 데이터를 년도별로 옮김
+(function migrateGrades(){
+  let moved = false;
+  Object.entries(state.terms).forEach(([key,t]) => { const y = key.split('-')[0];
+    Object.entries(t).forEach(([sid,d]) => { if(!d || !d.grades) return;
+      Object.entries(d.grades).forEach(([p,g]) => { const Y = ygOf(sid,y); if(!Y[p] && g && g.length) Y[p] = g; });
+      delete d.grades; moved = true; });
+  });
+  if(moved) try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
+})();
+function rowHas(r){ return r.title || r.price || r.order || r.quote; }
+function sdHas(d){ return !!d && PARTS.some(([p]) => !isOff(d,p) && (d[p]||[]).some(rowHas)); }
+function activeRows(d){ return d ? PARTS.flatMap(([p]) => isOff(d,p) ? [] : (d[p]||[])) : []; }
+/* 이동: 보낸 학교 교재 줄에 r.moves = [{id,to,part,qty,date,note}] 저장.
+   받는 학교는 같은 학기·같은 반의 같은 제목 교재 줄에서 주문 수량에 자동으로 더해짐 */
+const normT = t => (t||'').replace(/\s+/g,'').toLowerCase();
+const outOf = r => (r.moves||[]).reduce((a,m) => a + n(m.qty), 0);
+const inOf  = r => r.inQty ?? r._in ?? 0;
+const hide = (o,k,v) => Object.defineProperty(o, k, { value:v, writable:true, configurable:true, enumerable:false }); // 저장 파일에는 안 들어감
+function annotate(){
+  Object.values(state.terms).forEach(t => Object.values(t).forEach(d => PARTS.forEach(([p]) => (d?.[p]||[]).forEach(r => { hide(r,'_in',0); hide(r,'_inList',[]); }))));
+  Object.entries(state.terms).forEach(([key,t]) => Object.entries(t).forEach(([sid,d]) => PARTS.forEach(([p]) => (d?.[p]||[]).forEach(r => (r.moves||[]).forEach(m => {
+    const dest = (t[m.to]?.[m.part]||[]).find(x => normT(x.title) && normT(x.title) === normT(r.title));
+    hide(m,'_lost', !dest || isOff(t[m.to], m.part));
+    if(dest && !m._lost){ dest._in += n(m.qty); dest._inList.push({ from:sid, qty:n(m.qty), date:m.date, note:m.note }); }
+  })))));
+}
+function calc(rows){
+  const o = { order:0, quote:0, qamt:0, ret:0, amt:0, moved:0 };
+  rows.forEach(r => { const pr = n(r.price), ord = n(r.order) + inOf(r), out = outOf(r), q = ord - n(r.quote) - out;
+    o.order += ord; o.quote += n(r.quote); o.qamt += n(r.quote) * pr; o.ret += q; o.amt += q * pr; o.moved += inOf(r) - out; });
+  return o;
+}
+const sName = id => state.schools.find(x => x.id === id)?.name || '(삭제된 학교)';
+// 학교 짧은 이름: 교동초등학교·교동초 → 교동
+const sShort = id => { const nm = sName(id); return nm.replace(/\s*(초등학교|초교|초|중학교|중)$/,'') || nm; };
+// 주문 칸 표시: 20-3(교동)+2(조양). 이동이 없으면 null
+function orderFx(r){
+  const outs = (r.moves||[]).map(m => `-${won(n(m.qty))}(${sShort(m.to)})`);
+  const ins = (r._inList||[]).map(m => `+${won(m.qty)}(${sShort(m.from)})`);
+  if(!outs.length && !ins.length) return null;
+  return won(n(r.order)) + outs.join('') + ins.join('') + ' = ' + won(n(r.order) + inOf(r) - outOf(r));   // 예: 20-3(교동) = 17
+}
+const mdate = d => d ? d.slice(5).replace('-','/') : '';
+/* 년도별 수업 학교: state.ys[년도] = [학교id, ...] */
+function yearHasData(y,sid){ return SEMS.some(sm => sdHas(state.terms[`${y}-${sm}`]?.[sid])); }
+function migrateYearSchools(){
+  if(state.ys) return;
+  state.ys = {};
+  const years = new Set(Object.keys(state.terms).map(k => k.split('-')[0]));
+  years.forEach(y => { const ids = state.schools.filter(sc => yearHasData(y, sc.id)).map(sc => sc.id); if(ids.length) state.ys[y] = ids; });
+  // 올해는 보관하지 않은 학교 모두 포함 (기존 화면 그대로 유지)
+  const cy = String(cur.year); const set = new Set(state.ys[cy] || []);
+  state.schools.forEach(sc => { if(!sc.archived) set.add(sc.id); });
+  state.ys[cy] = [...set];
+  try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
+}
+migrateYearSchools();
+/* 교재 주문 없이 수업한 학교: state.nb[년도] = [학교id, ...] */
+function inNb(y,sid){ return (state.nb?.[y] || []).includes(sid); }
+function nbSchools(y){ return state.schools.filter(sc => inNb(y, sc.id)); }
+function setNb(y,sid,on){ state.nb = state.nb || {}; const a = new Set(state.nb[y] || []); on ? a.add(sid) : a.delete(sid); state.nb[y] = [...a]; }
+// 수업한 년도: 교재 주문 학교 목록, 교재 없음 목록, 입력 기록 중 하나라도 있으면 수업한 해
+function taughtYears(sid){
+  const ys = new Set();
+  Object.entries(state.ys || {}).forEach(([y,a]) => { if(a.includes(sid)) ys.add(+y); });
+  Object.entries(state.nb || {}).forEach(([y,a]) => { if(a.includes(sid)) ys.add(+y); });
+  Object.keys(state.terms).forEach(k => { const y = +k.split('-')[0]; if(sdHas(state.terms[k]?.[sid])) ys.add(y); });
+  return [...ys].sort((a,b) => a-b);
+}
+// [2022,2023,2024,2026] → "2022~2024·2026년"
+function rangeText(list){
+  if(!list.length) return '';
+  const parts = []; let st = list[0], pv = list[0];
+  for(let i = 1; i <= list.length; i++){
+    if(list[i] === pv + 1){ pv = list[i]; continue; }
+    parts.push(st === pv ? `${st}` : `${st}~${pv}`); st = pv = list[i];
+  }
+  return parts.join('·') + '년';
+}
+function inYear(y,sid){ return (state.ys?.[y] || []).includes(sid); }
+function yearSchools(y){ return state.schools.filter(sc => inYear(y, sc.id)); }
+function setInYear(y,sid,on){ state.ys = state.ys || {}; const a = new Set(state.ys[y] || []); on ? a.add(sid) : a.delete(sid); state.ys[y] = [...a]; }
+// 그 학기에 보일 학교: 그 해 수업 학교 + (혹시 빠졌어도) 기록이 있는 학교
+function visibleSchools(key){
+  const y = key.split('-')[0];
+  return state.schools.filter(sc => inYear(y, sc.id) || sdHas(state.terms[key]?.[sc.id]));
+}
+function termRows(key){
+  const t = state.terms[key]; const out = [];
+  if(!t) return out;
+  state.schools.forEach(s => { const d = t[s.id]; if(!d) return;
+    PARTS.forEach(([p,def]) => { if(isOff(d,p)) return;
+      (d[p]||[]).forEach(r => { if(rowHas(r)) out.push({ school:s.name, part:p, label:pname(d,p,def), ...r, sid:s.id, inQty:r._in||0, inList:r._inList||[] }); }); });
+  });
+  return out;
+}
+
+/* ===== 화면 ===== */
+function render(){
+  annotate();
+  $('#yLabel').textContent = cur.year + '년';
+  $('#semSeg').hidden = cur.view === 'history' || cur.view === 'schools';
+  document.querySelectorAll('#semSeg button').forEach(b => b.classList.toggle('on', +b.dataset.sem === cur.sem));
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.view === cur.view));
+  ({ input:renderInput, summary:renderSummary, history:renderHistory, schools:renderSchools })[cur.view]();
+}
+function addSchoolForm(){
+  return `<div class="addform"><input id="newSchool" placeholder="학교 이름" enterkeyhint="done"><button class="btn primary" data-act="addschool">추가</button></div>`;
+}
+function dataPanel(){
+  return `<div class="panel datapanel"><h3>데이터 관리</h3>
+    <div class="toolbar">
+      <button class="btn primary" data-act="backup">백업</button>
+      <button class="btn" data-act="restore">복구</button>
+      <button class="btn danger" data-act="reset">초기화</button>
+    </div></div>`;
+}
+
+/* 입력 탭: 맨 위에서 고른 년도·학기만 표시, 학교별로 골라 보기 가능 */
+function renderInput(){
+  const m = $('#main');
+  if(!state.schools.length){
+    m.innerHTML = `<div class="empty"><b>먼저 수업하는 학교를 추가하세요.</b><br>한 번 추가하면 모든 년도·학기에 1부·2부 칸이 자동으로 생겨요.${addSchoolForm()}</div>${dataPanel()}`;
+    return;
+  }
+  const key = tKey();
+  const all = visibleSchools(key);
+  if(cur.fs !== 'all' && !all.some(s => s.id === cur.fs)) cur.fs = 'all';
+  const list = cur.fs === 'all' ? all : all.filter(s => s.id === cur.fs);
+  m.innerHTML = `
+    <div class="bigsum"><small>${cur.year}년 ${cur.sem}학기 견적서 교재비 합계</small><b id="qtotal">0원</b></div>
+    <div class="totals" id="totals"></div>
+    <select class="filter" id="schoolFilter" aria-label="학교 골라 보기">
+      <option value="all">전체 학교 보기 (${all.length}곳)</option>
+      ${all.map(s => `<option value="${s.id}" ${s.id===cur.fs?'selected':''}>${esc(s.name)}</option>`).join('')}
+    </select>
+    <div class="toolbar"><button class="btn full" data-act="copyprev">지난 학기 교재 제목·단가 불러오기</button></div>
+    ${list.map(s => card(s,key)).join('') || '<div class="empty">이 해 수업 학교가 없어요. 학교 탭에서 넣어 주세요.</div>'}
+    ${dataPanel()}`;
+  updateCalc();
+}
+function card(s,key){
+  const d = sd(s.id, key);
+  return `<section class="card ${cur.closed[s.id]?'closed':''}" id="card-${s.id}">
+    <button class="card-head" data-act="toggle" data-sid="${s.id}" aria-label="${esc(s.name)} 펼치기/접기">
+      <h2>${esc(s.name)}</h2><span class="card-total" id="ct-${s.id}"></span>
+      <svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
+    <div class="card-body">
+      ${PARTS.map(([p,def]) => { const nm = pname(d,p,def); const k = `data-key="${key}" data-sid="${s.id}" data-part="${p}"`;
+        if(isOff(d,p)) return `<div class="part ${p} off"><span>${esc(nm)} 수업 없음</span><button class="pbtn" data-act="parton" ${k}>다시 추가</button></div>`;
+        return `<div class="part ${p}">
+          <div class="phead"><span class="plabel">${esc(nm)}</span>${gradeBtn(s.id,cur.year,p)}<span class="sp"></span>
+            <button class="pbtn" data-act="partname" ${k}>수정</button>
+            <button class="pbtn del" data-act="partoff" ${k}>삭제</button></div>
+          ${d[p].map((r,i) => rowHtml(key,s.id,p,i,r)).join('')}
+          ${p === 'p2' ? `<button class="link" data-act="addrow" ${k}>+ ${esc(nm)} 교재 추가</button>` : ''}
+        </div>`; }).join('')}
+    </div>
+  </section>`;
+}
+function rowHtml(key,sid,p,i,r){
+  const d = `data-key="${key}" data-sid="${sid}" data-part="${p}" data-idx="${i}"`;
+  const fx = orderFx(r);
+  const num = (f,label) => (f === 'order' && fx)
+    ? `<label><span>${label}</span><input type="text" inputmode="numeric" class="fx" ${d} data-f="${f}" data-fx="1" value="${esc(fx)}" title="${esc(fx)}권"></label>`
+    : `<label><span>${label}</span><input type="text" inputmode="numeric" ${d} data-f="${f}" value="${fmtIn(r[f])}"></label>`;
+  return `<div class="row">
+    <div class="tline"><input class="title" ${d} data-f="title" value="${esc(r.title)}" placeholder="교재 제목" aria-label="교재 제목" enterkeyhint="next">
+      <button class="icon" data-act="delrow" ${d} aria-label="이 교재 삭제">×</button></div>
+    <div class="nums${fx ? ' wide' : ''}">
+      ${num('price','단가(원)')}${num('order','주문')}${num('quote','견적')}
+      <div class="ret" id="r-${key}-${sid}-${p}-${i}"><span>반품</span><div><b>0</b><small></small></div></div>
+    </div>
+    ${(r.moves||[]).map(m => `<div class="mv ${m._lost?'lost':''}"><div class="t">↪ ${esc(sName(m.to))} ${m.part==='p1'?'1부':'2부'}로 <b>${won(n(m.qty))}권</b> 이동 <small>${mdate(m.date)}</small>${m.note?`<br><small>${esc(m.note)}</small>`:''}${m._lost?`<br><small>받는 학교에 같은 제목 교재가 없어요. 제목을 똑같이 맞춰 주세요</small>`:''}</div><button data-act="mvdel" ${d} data-mid="${m.id}" aria-label="이동 기록 삭제">×</button></div>`).join('')}
+    ${(r._inList||[]).map(m => `<div class="mv in"><div class="t">↩ ${esc(sName(m.from))}에서 <b>${won(m.qty)}권</b> 받음 <small>${mdate(m.date)} · 주문 수량에 포함</small>${m.note?`<br><small>${esc(m.note)}</small>`:''}</div></div>`).join('')}
+    ${r.memo !== undefined && r.memo !== null && (r.memo !== '' || r._memoOpen) ? `<input class="memo" ${d} data-f="memo" value="${esc(r.memo)}" placeholder="메모 (예: 11/8 교동에서 2권 더 요청)">` : ''}
+    <div class="rowx">
+      ${r.title ? `<button class="link" data-act="mvopen" ${d}>↪ 다른 학교로 이동</button>` : ''}
+      ${r.memo || r._memoOpen ? '' : `<button class="link" data-act="memo" ${d}>✎ 메모</button>`}
+    </div>
+  </div>`;
+}
+function updateCalc(){
+  annotate();
+  const key = tKey(); const all = [];
+  visibleSchools(key).forEach(s => {
+    const d = sd(s.id, key); const rows = activeRows(d); all.push(...rows);
+    PARTS.forEach(([p]) => { if(isOff(d,p)) return; d[p].forEach((r,i) => {
+      const el = document.getElementById(`r-${key}-${s.id}-${p}-${i}`); if(!el) return;
+      const q = n(r.order) + inOf(r) - n(r.quote) - outOf(r);
+      el.classList.toggle('neg', q < 0);
+      el.querySelector('b').textContent = won(q);
+      el.querySelector('small').textContent = q < 0 ? '수량 확인' : (n(r.price) && q ? won(q*n(r.price))+'원' : '');
+    }); });
+    const c = calc(rows), ct = document.getElementById('ct-'+s.id);
+    if(ct) ct.innerHTML = `교재비 <span class="q">${won(c.qamt)}원</span><br>반품 <b>${won(c.ret)}권</b> · ${won(c.amt)}원`;
+  });
+  const c = calc(all);
+  const qt = $('#qtotal'); if(qt) qt.textContent = won(c.qamt) + '원';
+  const tot = $('#totals');
+  if(tot) tot.innerHTML = `<div><small>주문 수량</small><b>${won(c.order)}</b></div><div><small>견적 수량</small><b>${won(c.quote)}</b></div><div class="r"><small>반품 수량</small><b>${won(c.ret)}</b></div><div class="r"><small>반품 금액</small><b>${won(c.amt)}</b></div>`;
+}
+
+function renderSummary(){
+  const rows = termRows(tKey());
+  const c = calc(rows);
+  const keys = Object.keys(state.terms).filter(k => termRows(k).length).sort((a,b) => b.localeCompare(a, undefined, {numeric:true}));
+  $('#main').innerHTML = `
+    <div class="bigsum"><small>${cur.year}년 ${cur.sem}학기 견적서 교재비 합계</small><b>${won(c.qamt)}원</b></div>
+    <div class="panel"><h3>${cur.year}년 ${cur.sem}학기 반품 내역</h3>
+    ${rows.length ? `<div class="tablewrap"><table class="stable">
+      <colgroup><col><col class="c-n"><col class="c-n"><col class="c-m"><col class="c-n"><col class="c-a"></colgroup>
+      <thead><tr><th>학교·교재</th><th>주문</th><th>견적</th><th>이동</th><th>반품</th><th>금액</th></tr></thead>
+      <tbody>${rows.map(r => { const pr = n(r.price), out = outOf(r), q = n(r.order) + r.inQty - n(r.quote) - out;
+        const mvTxt = [...(r.moves||[]).map(m => `<span class="mo">-${won(n(m.qty))}(${esc(sShort(m.to))})</span>`), ...r.inList.map(m => `<span class="mi">+${won(m.qty)}(${esc(sShort(m.from))})</span>`)].join('<br>') || '-';
+        return `<tr>
+          <td class="nm"><b>${esc(sShort(r.sid))}</b><span class="tag ${r.part}">${esc(r.label)}</span><br>${esc(r.title)||'-'}${r.memo?`<small>${esc(r.memo)}</small>`:''}</td>
+          <td>${won(n(r.order))}</td><td>${won(n(r.quote))}</td><td class="mv2">${mvTxt}</td><td class="rq">${won(q)}</td>
+          <td class="am">${won(n(r.quote)*pr)}<small>반품 ${won(q*pr)}</small></td></tr>`; }).join('')}
+      <tr class="sum"><td class="nm">합계</td><td>${won(rows.reduce((a,r) => a + n(r.order), 0))}</td><td>${won(c.quote)}</td><td class="mv2">${c.moved ? (c.moved > 0 ? '+' : '') + won(c.moved) : '-'}</td><td class="rq">${won(c.ret)}</td><td class="am">${won(c.qamt)}<small>반품 ${won(c.amt)}</small></td></tr></tbody>
+    </table></div>
+    <div class="toolbar" style="margin:10px 0 0"><button class="btn" data-act="mktsv">엑셀용 표 복사</button></div>` : `<p>이 학기에 입력된 교재가 없어요. 주문내역 탭에서 시작하세요.</p>`}
+    </div>
+    <div class="panel"><h3>${cur.year}년 학기별 기록</h3>
+    ${(() => { const cs = SEMS.map(sm => calc(termRows(tKey(cur.year, sm)))); const t = cs.reduce((a,c) => ({ qamt:a.qamt+c.qamt, ret:a.ret+c.ret, amt:a.amt+c.amt }), { qamt:0, ret:0, amt:0 });
+      return `<div class="tablewrap"><table class="stable"><colgroup><col style="width:22%"><col><col style="width:18%"><col></colgroup>
+        <thead><tr><th>학기</th><th>교재비</th><th>반품 수량</th><th>반품 금액</th></tr></thead>
+        <tbody>${SEMS.map((sm,i) => `<tr><td><button class="link" data-act="goterm" data-y="${cur.year}" data-s="${sm}">${sm}학기</button></td><td>${won(cs[i].qamt)}</td><td class="rq">${won(cs[i].ret)}</td><td>${won(cs[i].amt)}</td></tr>`).join('')}
+        <tr class="sum"><td>합계</td><td>${won(t.qamt)}</td><td class="rq">${won(t.ret)}</td><td>${won(t.amt)}</td></tr></tbody></table></div>`; })()}
+    </div>`;
+}
+
+function renderHistory(){
+  const m = $('#main');
+  if(!state.schools.length){ m.innerHTML = `<div class="empty"><b>학교를 먼저 추가하세요.</b>${addSchoolForm()}</div>`; return; }
+  if(!state.schools.some(s => s.id === cur.hs)) cur.hs = state.schools[0].id;
+  const s = state.schools.find(x => x.id === cur.hs);
+  const years = [0,1,2,3,4].map(k => cur.year - k);
+  const norm = t => (t||'').replace(/\s+/g,'').toLowerCase();
+  const dOf = (sid,y,sem) => state.terms[`${y}-${sem}`]?.[sid];
+  const titles = (d,p) => d && !isOff(d,p) ? (d[p]||[]).map(r => (r.title||'').trim()).filter(Boolean) : [];
+  // 이 학교 5년간 사용 횟수 (중복 표시용)
+  const count = {};
+  years.forEach(y => SEMS.forEach(sem => PARTS.forEach(([p]) => titles(dOf(s.id,y,sem),p).forEach(t => { const k = norm(t); count[k] = (count[k]||0) + 1; }))));
+  const cell = (y,sem,p) => {
+    const key = `${y}-${sem}`, d = dOf(s.id,y,sem);
+    if(isOff(d,p)) return `<span class="none">수업 없음</span>`;
+    const list = titles(d,p);
+    return `${list.length ? list.map(t => esc(t)).join('<br>') : '<span class="none">-</span>'}`;
+  };
+  const rows = years.map(y => SEMS.map(sem =>
+    `<tr class="${sem===1?'s1':'s2'}">${sem===1?`<td class="hy" rowspan="2">${y}년${gradeBtn(s.id,y,'p1','1부')}${gradeBtn(s.id,y,'p2','2부')}</td>`:''}<td class="sem">${sem}학기</td><td>${cell(y,sem,'p1')}</td><td>${cell(y,sem,'p2')}</td></tr>`
+  ).join('')).join('');
+
+  // 학년별 사용 교재: 고른 년도·학년 학생들이 지난 학년에 배운 교재 (같은 학교, 최대 5년)
+  const gy = +cur.gyear || cur.year, g = +cur.grade || 0;
+  let gradeHtml = '<p>년도와 학년을 고르면, 그 학생들이 이전 학년에 어떤 교재로 배웠는지 보여줘요.</p>';
+  if(g){
+    const blocks = [];
+    const pastTitles = new Set();
+    for(let k = Math.min(g-1, 4); k >= 0; k--){          // 오래된 해 → 올해 순서
+      const y = gy - k, gr = g - k;
+      const parts = PARTS.filter(([p]) => gradesOf(s.id,y,p).includes(gr));
+      const nowCls = k === 0 ? ' now' : '';
+      const head = `<h4>${y}년 · ${gr}학년 ${k === 0 ? '<small>(선택한 해)</small>' : ''}`;
+      if(!PARTS.some(([p]) => gradesOf(s.id,y,p).length)){
+        blocks.push(`<div class="cohort${nowCls}">${head}</h4><div class="ln none">이 해 학년이 아직 없어요. 위 표 ${y}년 칸에서 1부·2부 학년을 적어 주세요.</div></div>`); continue;
+      }
+      if(!parts.length){ blocks.push(`<div class="cohort${nowCls}">${head}</h4><div class="ln none">${gr}학년 수업 없음</div></div>`); continue; }
+      const lines = [];
+      parts.forEach(([p,def]) => SEMS.forEach(sem => {
+        const d = dOf(s.id,y,sem); const list = titles(d,p);
+        const nm = pname(d,p,def);
+        const txt = isOff(d,p) ? '<span class="none">수업 없음</span>'
+          : list.length ? list.map(t => `${esc(t)}${k === 0 && pastTitles.has(norm(t)) ? '<span class="dup">이전에 배움</span>' : ''}`).join(', ') : '<span class="none">-</span>';
+        lines.push(`<div class="ln"><span>${sem}학기</span>${parts.length > 1 ? esc(nm)+' ' : ''}${txt}</div>`);
+        if(k > 0) list.forEach(t => pastTitles.add(norm(t)));
+      }));
+      const pn = parts.map(([p,def]) => def).join('·');
+      blocks.push(`<div class="cohort${nowCls}">${head} <small>${pn}</small></h4>${lines.join('')}</div>`);
+    }
+    gradeHtml = g === 1 ? `<p>1학년은 이전 학년이 없어요. 아래는 ${gy}년 1학년 교재예요.</p>${blocks.join('')}` : blocks.join('');
+  }
+  const yOpts = []; for(let y = cur.year + 1; y >= cur.year - 4; y--) yOpts.push(y);
+
+  m.innerHTML = `
+    <div class="panel"><h3>학교별 수업 내용</h3>
+      <p>${cur.year-4}년~${cur.year}년(5년) 동안 쓴 교재예요. 1부·2부의 학년 버튼을 눌러 학년을 적을 수 있어요.</p>
+      <select id="histSchool" aria-label="학교 선택">${state.schools.map(x => `<option value="${x.id}" ${x.id===cur.hs?'selected':''}>${esc(x.name)}</option>`).join('')}</select>
+    </div>
+    <div class="tablewrap" style="margin-bottom:12px"><table class="htable">
+      <colgroup><col class="c-yr"><col class="c-sem"><col><col></colgroup>
+      <thead><tr><th class="hy">년도</th><th class="sem">학기</th><th><span class="tag p1">1부</span></th><th><span class="tag p2">2부</span></th></tr></thead>
+      <tbody>${rows}</tbody></table></div>
+    <div class="panel"><h3>학년별 이전 교재 (${esc(s.name)})</h3>
+      <div class="gctl">
+        <select id="gradeYear" aria-label="년도 선택">${yOpts.map(y => `<option value="${y}" ${y===gy?'selected':''}>${y}년</option>`).join('')}</select>
+        <select id="gradeSel" aria-label="학년 선택"><option value="">학년 선택</option>${[1,2,3,4,5,6].map(i => `<option value="${i}" ${i===g?'selected':''}>${i}학년</option>`).join('')}</select>
+      </div>
+      ${gradeHtml}
+    </div>`;
+}
+
+function renderSchools(){
+  const y = cur.year, ny = y + 1;
+  const mine = yearSchools(y), nb = nbSchools(y);
+  const rest = state.schools.filter(sc => !inYear(y, sc.id) && !inNb(y, sc.id));
+  const nextCnt = mine.filter(sc => !inYear(ny, sc.id)).length + nb.filter(sc => !inNb(ny, sc.id) && !inYear(ny, sc.id)).length;
+  const rec = state.schools.map(sc => ({ sc, yrs: taughtYears(sc.id) })).filter(x => x.yrs.length)
+    .sort((a,b) => a.yrs[0] - b.yrs[0] || a.sc.name.localeCompare(b.sc.name,'ko'));
+  $('#main').innerHTML = `<div class="panel"><h3>${y}년 수업 학교 (${mine.length}곳)</h3>
+    ${addSchoolForm()}
+    <ul class="slist">${mine.map(sc => `<li>
+      <input value="${esc(sc.name)}" data-rename="${sc.id}" aria-label="학교 이름">
+      <button class="sm" data-act="up" data-sid="${sc.id}" aria-label="위로">▲</button>
+      <button class="sm" data-act="yout" data-sid="${sc.id}">빼기</button>
+      <button class="sm" data-act="delschool" data-sid="${sc.id}" style="color:var(--ret)">삭제</button>
+    </li>`).join('') || '<li class="none">아직 없어요. 위에서 추가하세요.</li>'}</ul>
+  </div>
+  <div class="panel"><h3>${y}년 교재 없이 수업하는 학교 (${nb.length}곳)</h3>
+    <div class="addform"><input id="newSchoolNb" placeholder="학교 이름" enterkeyhint="done"><button class="btn primary" data-act="addschool" data-nb="1">추가</button></div>
+    <ul class="slist">${nb.map(sc => `<li>
+      <input value="${esc(sc.name)}" data-rename="${sc.id}" aria-label="학교 이름">
+      <button class="sm" data-act="tobook" data-sid="${sc.id}">교재 주문</button>
+      <button class="sm" data-act="nbout" data-sid="${sc.id}">빼기</button>
+      <button class="sm" data-act="delschool" data-sid="${sc.id}" style="color:var(--ret)">삭제</button>
+    </li>`).join('')}</ul>
+    ${mine.length || nb.length ? `<button class="btn primary full" style="margin-top:12px" data-act="carry">${y}년 학교를 ${ny}년에도 넣기${nextCnt ? ` (${nextCnt}곳)` : ' (이미 모두 들어 있음)'}</button>` : ''}
+  </div>
+  ${rest.length ? `<div class="panel"><h3>다른 해에 수업한 학교</h3>
+    <ul class="slist">${rest.map(sc => `<li>
+      <span style="flex:1;min-width:0"><b>${esc(sc.name)}</b><br><span class="yrs">${rangeText(taughtYears(sc.id)) || '기록 없음'}</span></span>
+      <button class="sm" data-act="yin" data-sid="${sc.id}">${y}년에 넣기</button>
+      <button class="sm" data-act="nbin" data-sid="${sc.id}">교재 없이</button>
+      <button class="sm" data-act="delschool" data-sid="${sc.id}" style="color:var(--ret)">삭제</button>
+    </li>`).join('')}</ul></div>` : ''}
+  <div class="panel"><h3>수업 기록 (전체 ${rec.length}곳)</h3>
+    ${rec.length ? `<ul class="rec">${rec.map(({sc,yrs}) => { const nby = yrs.filter(yy => inNb(yy, sc.id));
+      return `<li><span><b>${esc(sc.name)}</b>${nby.length === yrs.length ? '<span class="nbtag">교재 없음</span>' : ''}${nby.length && nby.length < yrs.length ? `<small>교재 없이: ${rangeText(nby)}</small>` : ''}</span>
+        <span class="r">${rangeText(yrs)}<br><em>${yrs.length}년</em></span></li>`; }).join('')}</ul>` : '<p>아직 기록이 없어요.</p>'}
+  </div>`;
+}
+
+/* ===== 백업·복구 ===== */
+const PICKER_ID = 'textbook-backup';   // 같은 id를 쓰면 브라우저가 마지막 폴더를 기억함
+function backupName(){ const d = new Date(); const p = x => String(x).padStart(2,'0'); return `수업내용_${String(d.getFullYear()).slice(2)}-${p(d.getMonth()+1)}-${p(d.getDate())}.json`; }   // 예: 수업내용_26-11-08.json
+async function doBackup(){
+  const text = JSON.stringify({ app:'textbook-return', v:2, savedAt:new Date().toISOString(), data:state }, null, 1);
+  const filename = backupName();
+  // 1) 폴더를 직접 고르는 저장 창 (지원하는 브라우저)
+  if(window.showSaveFilePicker){
+    try{
+      const h = await window.showSaveFilePicker({ id:PICKER_ID, suggestedName:filename, startIn:'documents', types:[{ description:'백업 파일', accept:{'application/json':['.json']} }] });
+      const w = await h.createWritable(); await w.write(text); await w.close();
+      toast('백업 파일을 저장했어요'); return;
+    }catch(e){ if(e && e.name === 'AbortError') return; }
+  }
+  // 2) 앱 저장 기능 (아이폰: 공유 → 파일에 저장으로 폴더 선택 / 안드로이드: 다운로드)
+  try{
+    const dl = await window.claude?.use?.('downloads');
+    if(dl){
+      try{ await dl.save({ filename, data:text }); toast('백업 파일을 저장했어요'); }
+      catch(e){ if(e?.code !== 'declined') toast('저장하지 못했어요. 잠시 후 다시 눌러 주세요', true); }
+      return;
+    }
+  }catch(e){}
+  // 3) 일반 다운로드
+  try{
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], {type:'application/json'})); a.download = filename;
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    toast('다운로드 폴더에 저장했어요');
+  }catch(e){ toast('이 화면에서는 저장할 수 없어요', true); }
+}
+async function doRestore(){
+  // 1) 마지막으로 백업한 폴더부터 여는 열기 창 (지원하는 브라우저)
+  if(window.showOpenFilePicker){
+    try{
+      const [h] = await window.showOpenFilePicker({ id:PICKER_ID, startIn:'documents', types:[{ description:'백업 파일', accept:{'application/json':['.json']} }] });
+      applyBackup(await (await h.getFile()).text()); return;
+    }catch(e){ if(e && e.name === 'AbortError') return; }
+  }
+  // 2) 휴대폰 기본 파일 선택 창
+  const fi = $('#fileIn'); fi.value = ''; fi.click();
+}
+async function applyBackup(text){
+  try{
+    const o = JSON.parse(text); const d = o.data || o;
+    if(!Array.isArray(d.schools) || typeof d.terms !== 'object') throw 0;
+    const when = o.savedAt ? new Date(o.savedAt).toLocaleString('ko-KR') : '';
+    if(!await ask(`${when ? when + '에 만든 ' : ''}백업으로 지금 기록을 바꿀까요?\n학교 ${d.schools.length}곳의 기록이 들어 있어요.`, { ok:'복구' })) return;
+    state = d; migrateYearSchools(); save(); render(); toast('복구했어요');
+  }catch(e){ toast('이 앱의 백업 파일(.json)이 아니에요', true); }
+}
+$('#fileIn').addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0]; if(!f) return;
+  const r = new FileReader(); r.onload = () => applyBackup(String(r.result)); r.onerror = () => toast('파일을 읽지 못했어요', true); r.readAsText(f);
+});
+
+/* ===== 확인·입력 창: 기본 confirm/prompt 대신 사용 ===== */
+function dialog(msg, def, opt = {}){
+  return new Promise(res => {
+    const sh = $('#askSheet'), ok = $('#askOk'), cancel = $('#askCancel'), inp = $('#askIn');
+    $('#askMsg').textContent = msg;
+    inp.hidden = def === null; if(def !== null) inp.value = def;
+    ok.textContent = opt.ok || '확인';
+    ok.className = 'btn ' + (opt.danger ? 'dangerfill' : 'primary');
+    sh.hidden = false;
+    const done = v => { sh.hidden = true; ok.onclick = cancel.onclick = sh.onclick = inp.onkeydown = null; res(v); };
+    ok.onclick = () => done(def === null ? true : inp.value);
+    cancel.onclick = () => done(def === null ? false : null);
+    sh.onclick = e => { if(e.target === sh) done(def === null ? false : null); };
+    inp.onkeydown = e => { if(e.key === 'Enter') done(inp.value); };
+    (def === null ? ok : inp).focus();
+  });
+}
+const ask = (msg, opt) => dialog(msg, null, opt);
+const askText = (msg, def) => dialog(msg, String(def ?? ''), { ok:'저장' });
+
+/* ===== 학년 선택 창 (드롭다운 두 개: 시작 학년 ~ 끝 학년) ===== */
+let gPending = null;
+function openGradeSheet(sid, y, part){
+  gPending = { sid, y, part };
+  const g = gradesOf(sid, y, part), def = PARTS.find(x => x[0]===part)[1];
+  const school = state.schools.find(x => x.id === sid);
+  $('#gsTitle').textContent = `${school ? school.name + ' · ' : ''}${y}년 ${def} 학년`;
+  const opts = (sel, empty) => `<option value="">${empty}</option>` + [1,2,3,4,5,6].map(i => `<option value="${i}" ${i===sel?'selected':''}>${i}</option>`).join('');
+  $('#gFrom').innerHTML = opts(g[0] || 0, '선택');
+  $('#gTo').innerHTML = opts(g.length > 1 ? g[g.length-1] : 0, '없음');
+  $('#gradeSheet').hidden = false;
+  $('#gFrom').focus();
+}
+function closeGradeSheet(){ $('#gradeSheet').hidden = true; gPending = null; }
+$('#gradeSheet').addEventListener('click', e => { if(e.target.id === 'gradeSheet') closeGradeSheet(); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape'){ if(!$('#gradeSheet').hidden) closeGradeSheet(); if(!$('#moveSheet').hidden) closeMoveSheet(); } });
+
+/* ===== 이동 창 ===== */
+let mvPending = null;
+function openMoveSheet(key, sid, part, idx){
+  const r = sd(sid,key)[part][idx];
+  const others = yearSchools(cur.year).filter(x => x.id !== sid);
+  if(!others.length){ toast('이동할 다른 학교가 없어요. 학교 탭에서 추가하세요', true); return; }
+  mvPending = { key, sid, part, idx };
+  const left = n(r.order) + inOf(r) - n(r.quote) - outOf(r);
+  $('#mvTitle').textContent = `${r.title} → 다른 학교로`;
+  $('#mvSub').textContent = `${sName(sid)} · ${part==='p1'?'1부':'2부'} · 지금 남는 수량 ${won(left)}권. 받는 학교 주문 수량에 자동으로 더해져요.`;
+  $('#mvTo').innerHTML = others.map(x => `<option value="${x.id}">${esc(x.name)}</option>`).join('');
+  $('#mvPart').value = part;
+  $('#mvQty').value = left > 0 ? String(left) : '';
+  const t = new Date(), p2 = v => String(v).padStart(2,'0');
+  $('#mvDate').value = `${t.getFullYear()}-${p2(t.getMonth()+1)}-${p2(t.getDate())}`;
+  $('#mvNote').value = '';
+  $('#moveSheet').hidden = false; $('#mvQty').focus();
+}
+function closeMoveSheet(){ $('#moveSheet').hidden = true; mvPending = null; }
+function saveMove(){
+  const { key, sid, part, idx } = mvPending; const r = sd(sid,key)[part][idx];
+  const qty = n($('#mvQty').value); if(qty <= 0){ toast('이동 수량을 입력하세요', true); return; }
+  const to = $('#mvTo').value, tp = $('#mvPart').value;
+  // 받는 학교에 같은 제목 교재 줄이 없으면 새로 만듦 (단가 함께 복사)
+  const dd = sd(to, key); if(dd.off[tp]) delete dd.off[tp];
+  if(!dd[tp].some(x => normT(x.title) === normT(r.title))){
+    const empty = dd[tp].findIndex(x => !rowHas(x));
+    const nr = { title:r.title, price:r.price, order:'', quote:'' };
+    if(empty >= 0) dd[tp][empty] = nr; else dd[tp].push(nr);
+  }
+  (r.moves = r.moves || []).push({ id:uid(), to, part:tp, qty:String(qty), date:$('#mvDate').value, note:$('#mvNote').value.trim() });
+  closeMoveSheet(); save(); render(); toast(`${sName(to)}로 ${won(qty)}권 이동했어요`);
+}
+$('#moveSheet').addEventListener('click', e => { if(e.target.id === 'moveSheet') closeMoveSheet(); });
+$('#mvQty').addEventListener('input', e => { e.target.value = e.target.value.replace(/[^0-9]/g,''); });
+
+/* ===== 동작 ===== */
+function copyText(text){
+  const done = () => toast('복사했어요. 엑셀 첫 칸에 붙여넣으세요');
+  const fallback = () => {
+    const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); done(); }catch(e){ toast('복사하지 못했어요', true); }
+    ta.remove();
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(fallback);
+  else fallback();
+}
+function addSchool(nb){
+  const inp = $(nb ? '#newSchoolNb' : '#newSchool'); const name = (inp?.value || '').trim();
+  if(!name){ toast('학교 이름을 입력하세요', true); return; }
+  const y = cur.year;
+  let sc = state.schools.find(s => s.name === name);
+  if(sc && (nb ? inNb(y, sc.id) : inYear(y, sc.id))){ toast('이미 있는 학교예요', true); return; }
+  if(!sc){ sc = { id: uid(), name }; state.schools.push(sc); }
+  if(nb){ setNb(y, sc.id, true); setInYear(y, sc.id, false); } else { setInYear(y, sc.id, true); setNb(y, sc.id, false); }
+  save(true); toast(`${name}을 ${y}년${nb ? ' 교재 없는 학교로' : '에'} 넣었어요`); render();
+}
+
+document.addEventListener('click', async e => {
+  const b = e.target.closest('button'); if(!b) return;
+  if(b.dataset.view){ cur.view = b.dataset.view; save(true); render(); window.scrollTo(0,0); return; }
+  if(b.dataset.sem){ cur.sem = +b.dataset.sem; save(true); render(); return; }
+  if(b.id === 'yPrev'){ cur.year--; save(true); render(); return; }
+  if(b.id === 'yNext'){ cur.year++; save(true); render(); return; }
+  const a = b.dataset.act; if(!a) return;
+  const { sid, part, key } = b.dataset; const idx = +b.dataset.idx;
+
+  if(a === 'addschool') addSchool(!!b.dataset.nb);
+  else if(a === 'toggle'){ cur.closed[sid] = !cur.closed[sid]; document.getElementById('card-'+sid).classList.toggle('closed', cur.closed[sid]); save(true); }
+  else if(a === 'addrow'){ sd(sid,key)[part].push(blank()); save(true); render(); }
+  else if(a === 'delrow'){
+    const arr = sd(sid,key)[part];
+    if(rowHas(arr[idx]) && !await ask('이 교재 줄을 삭제할까요?', { ok:'삭제', danger:true })) return;
+    if(arr.length > 1) arr.splice(idx,1); else arr[0] = blank();
+    save(); render();
+  }
+  else if(a === 'partname'){
+    const d = sd(sid,key), def = PARTS.find(x => x[0]===part)[1];
+    const v = await askText('이 학기에 쓸 이름을 입력하세요 (예: 1부 저학년반)', pname(d,part,def));
+    if(v === null) return;
+    if(v.trim() && v.trim() !== def) d.names[part] = v.trim(); else delete d.names[part];
+    save(); render();
+  }
+  else if(a === 'partoff'){
+    const d = sd(sid,key), nm = pname(d,part,PARTS.find(x => x[0]===part)[1]);
+    if(!await ask(`이번 학기에 ${nm} 수업을 하지 않나요?\n${nm}을 삭제하면 합계와 반품 계산에서 빠져요. (입력한 내용은 ‘다시 추가’로 되살릴 수 있어요)`, { ok:'삭제', danger:true })) return;
+    d.off[part] = true; save(); render();
+  }
+  else if(a === 'grade') openGradeSheet(sid, b.dataset.y, part);
+  else if(a === 'memo'){ const r = sd(sid,key)[part][idx]; r.memo = r.memo || ''; hide(r,'_memoOpen',true); render();
+    const el = document.querySelector(`input.memo[data-key="${key}"][data-sid="${sid}"][data-part="${part}"][data-idx="${idx}"]`); if(el) el.focus(); }
+  else if(a === 'mvopen') openMoveSheet(key, sid, part, idx);
+  else if(a === 'mvcancel') closeMoveSheet();
+  else if(a === 'mvsave') saveMove();
+  else if(a === 'mvdel'){
+    const r = sd(sid,key)[part][idx]; const m = (r.moves||[]).find(x => x.id === b.dataset.mid);
+    if(!m || !await ask(`${sName(m.to)}로 보낸 ${n(m.qty)}권 이동 기록을 삭제할까요?\n받는 학교 주문 수량에서도 빠져요.`, { ok:'삭제', danger:true })) return;
+    r.moves = r.moves.filter(x => x !== m); if(!r.moves.length) delete r.moves;
+    save(); render();
+  }
+  else if(a === 'gcancel') closeGradeSheet();
+  else if(a === 'gclear' || a === 'gsave'){
+    const { sid:gs, y, part:gp } = gPending; const Y = ygOf(gs, y);
+    if(a === 'gclear') delete Y[gp];
+    else{
+      let f = +$('#gFrom').value, t = +$('#gTo').value;
+      if(!f && !t){ delete Y[gp]; }
+      else{ if(!f) f = t; if(!t) t = f; if(t < f) [f,t] = [t,f];
+        Y[gp] = Array.from({length:t-f+1}, (_,i) => f+i); }
+    }
+    closeGradeSheet(); save(); render();
+  }
+  else if(a === 'parton'){ delete sd(sid,key).off[part]; save(); render(); }
+  else if(a === 'copyprev'){
+    const pt = state.terms[prevKey()];
+    if(!pt || !Object.values(pt).some(sdHas)){ toast('지난 학기 기록이 없어요', true); return; }
+    const t = state.terms[tKey()];
+    if(t && Object.values(t).some(sdHas) && !await ask('이번 학기 교재 제목·단가를 지난 학기 것으로 바꿀까요?\n수량은 그대로 둬요.', { ok:'불러오기' })) return;
+    yearSchools(cur.year).forEach(s => { const src = pt[s.id]; if(!src) return; const dst = sd(s.id);
+      PARTS.forEach(([p]) => {
+        dst[p] = (src[p]||[]).map((r,i) => ({ title:r.title, price:r.price, order:dst[p][i]?.order ?? '', quote:dst[p][i]?.quote ?? '' }));
+        if(!dst[p].length) dst[p] = [blank()];
+        if(src.off?.[p]) dst.off[p] = true; else delete dst.off[p];
+        if(src.names?.[p]) dst.names[p] = src.names[p]; else delete dst.names[p];
+      });
+    });
+    const py = prevKey().split('-')[0];
+    if(String(py) !== String(cur.year)) state.schools.forEach(sc => PARTS.forEach(([p]) => {
+      const pg = gradesOf(sc.id,py,p); if(pg.length && !gradesOf(sc.id,cur.year,p).length) ygOf(sc.id,cur.year)[p] = [...pg];
+    }));
+    save(true); toast('지난 학기 교재를 불러왔어요'); render();
+  }
+  else if(a === 'goterm'){ cur.year = +b.dataset.y; cur.sem = +b.dataset.s; cur.view = 'input'; save(true); render(); window.scrollTo(0,0); }
+  else if(a === 'up'){   // 올해 목록 안에서 바로 위 학교와 자리 바꾸기
+    const list = yearSchools(cur.year); const k = list.findIndex(x => x.id === sid); if(k <= 0) return;
+    const i = state.schools.indexOf(list[k]), j = state.schools.indexOf(list[k-1]);
+    [state.schools[i], state.schools[j]] = [state.schools[j], state.schools[i]]; save(true); render();
+  }
+  else if(a === 'yout'){ const sc = state.schools.find(x => x.id === sid);
+    if(!await ask(`${sc.name}을 ${cur.year}년 수업 학교에서 뺄까요?\n입력한 기록은 지워지지 않아요.`, { ok:'빼기' })) return;
+    setInYear(cur.year, sid, false); save(); render(); }
+  else if(a === 'yin'){ setInYear(cur.year, sid, true); setNb(cur.year, sid, false); save(true); toast(`${cur.year}년에 넣었어요`); render(); }
+  else if(a === 'nbin'){ setNb(cur.year, sid, true); setInYear(cur.year, sid, false); save(true); toast(`${cur.year}년 교재 없는 학교로 넣었어요`); render(); }
+  else if(a === 'tobook'){ setNb(cur.year, sid, false); setInYear(cur.year, sid, true); save(true); toast('교재 주문 학교로 옮겼어요'); render(); }
+  else if(a === 'nbout'){ const sc = state.schools.find(x => x.id === sid);
+    if(!await ask(`${sc.name}을 ${cur.year}년 수업 학교에서 뺄까요?`, { ok:'빼기' })) return;
+    setNb(cur.year, sid, false); save(); render(); }
+  else if(a === 'carry'){
+    const ny = cur.year + 1; let cnt = 0;
+    yearSchools(cur.year).forEach(sc => { if(!inYear(ny, sc.id)){ setInYear(ny, sc.id, true); setNb(ny, sc.id, false); cnt++; } });
+    nbSchools(cur.year).forEach(sc => { if(!inNb(ny, sc.id) && !inYear(ny, sc.id)){ setNb(ny, sc.id, true); cnt++; } });
+    if(!cnt){ toast(`${ny}년에 이미 모두 들어 있어요`); return; }
+    save(true); toast(`${ny}년에 ${cnt}곳을 넣었어요`); render();
+  }
+  else if(a === 'delschool'){
+    const s = state.schools.find(x => x.id === sid);
+    if(!await ask(`${s.name}와 모든 년도 기록을 삭제할까요?\n되돌릴 수 없어요. 올해만 빼려면 ‘빼기’를 쓰세요.`, { ok:'삭제', danger:true })) return;
+    state.schools = state.schools.filter(x => x.id !== sid);
+    Object.values(state.terms).forEach(t => delete t[sid]);
+    Object.keys(state.ys || {}).forEach(y => setInYear(y, sid, false));
+    Object.keys(state.nb || {}).forEach(y => setNb(y, sid, false));
+    save(); render();
+  }
+  else if(a === 'backup') doBackup();
+  else if(a === 'restore') doRestore();
+  else if(a === 'reset'){
+    if(!await ask('모든 학교와 모든 년도 기록을 지울까요?\n먼저 백업했는지 확인하세요.', { ok:'초기화', danger:true })) return;
+    if(!await ask('정말 지울까요? 되돌릴 수 없어요.', { ok:'모두 지우기', danger:true })) return;
+    state = { schools:[], terms:{} }; save(); render(); toast('초기화했어요');
+  }
+  else if(a === 'mktsv'){
+    const rows = termRows(tKey());
+    const head = ['학년도','학기','학교','구분','교재명','단가','주문수량','받은이동','보낸이동','견적수량','교재비','반품수량','반품금액','메모'];
+    const clean = v => String(v||'').replace(/[\t\n]/g,' ');
+    const lines = rows.map(r => { const pr = n(r.price), out = outOf(r), q = n(r.order) + inOf(r) - n(r.quote) - out;
+      const mvNote = (r.moves||[]).map(m => `${sName(m.to)} ${n(m.qty)}권 이동`).join(', ');
+      return [cur.year, cur.sem+'학기', r.school, r.label, clean(r.title), ...[pr, n(r.order), inOf(r), out, n(r.quote), n(r.quote)*pr, q, q*pr].map(won), clean([mvNote, r.memo].filter(Boolean).join(' / '))].join('\t'); });   // 숫자는 1,234 형식 (년도 제외)
+    copyText([head.join('\t'), ...lines].join('\n'));
+  }
+});
+
+document.addEventListener('input', e => {
+  const el = e.target;
+  if(el.dataset.f){
+    let v = el.value;
+    if(el.dataset.f !== 'title' && el.dataset.f !== 'memo'){   // 숫자 칸: 쉼표 자동 표시, 저장은 숫자만
+      v = v.replace(/[^0-9]/g,'');
+      el.value = fmtIn(v);
+    }
+    sd(el.dataset.sid, el.dataset.key)[el.dataset.part][+el.dataset.idx][el.dataset.f] = v;
+    save(true); updateCalc();
+  }
+  else if(el.dataset.rename){ const s = state.schools.find(x => x.id === el.dataset.rename); if(s){ s.name = el.value.trim() || s.name; save(true); } }
+});
+document.addEventListener('change', e => {
+  if(e.target.dataset && e.target.dataset.f === 'title' && cur.view === 'input') render();   // 이동 연결(같은 제목) 다시 계산
+  if(e.target.dataset && e.target.dataset.f === 'memo' && !e.target.value.trim()){ const r = sd(e.target.dataset.sid, e.target.dataset.key)[e.target.dataset.part][+e.target.dataset.idx]; delete r.memo; save(true); render(); }
+  if(e.target.id === 'histSchool'){ cur.hs = e.target.value; save(true); renderHistory(); }
+  if(e.target.id === 'gradeSel'){ cur.grade = e.target.value; save(true); renderHistory(); }
+  if(e.target.id === 'gradeYear'){ cur.gyear = e.target.value; save(true); renderHistory(); }
+  if(e.target.id === 'schoolFilter'){ cur.fs = e.target.value; if(cur.fs !== 'all') cur.closed[cur.fs] = false; save(true); renderInput(); }
+});
+document.addEventListener('keydown', e => { if(e.key === 'Enter' && e.target.id === 'newSchool') addSchool(false); if(e.key === 'Enter' && e.target.id === 'newSchoolNb') addSchool(true); });
+document.addEventListener('focusin', e => { const el = e.target;
+  if(el.dataset && el.dataset.fx){ const r = sd(el.dataset.sid, el.dataset.key)[el.dataset.part][+el.dataset.idx];
+    el.value = fmtIn(r.order); el.classList.remove('fx'); try{ el.setSelectionRange(el.value.length, el.value.length); }catch(_){} } });
+document.addEventListener('focusout', e => { const el = e.target;
+  if(el.dataset && el.dataset.fx){ const r = sd(el.dataset.sid, el.dataset.key)[el.dataset.part][+el.dataset.idx];
+    const fx = orderFx(r); if(fx){ el.value = fx; el.classList.add('fx'); el.title = fx + '권'; } } });
+
+let tt;
+function toast(msg, err){ const t = $('#toast'); t.textContent = msg; t.classList.toggle('err', !!err); t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 2000); }
+
+render();
+</script>
+<script>
+// 오프라인에서도 열리도록 서비스 워커 등록
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(err => console.warn('서비스 워커 등록 실패', err)));
+}
+</script>
+</body>
+</html>
