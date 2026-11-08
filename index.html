@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ebe5fc" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#24233a" media="(prefers-color-scheme: dark)">
+<meta name="robots" content="noindex, nofollow">
+<meta name="googlebot" content="noindex, nofollow">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -262,6 +264,8 @@ textarea{width:100%;min-height:130px;background:var(--surface2);border:1px solid
 .rec li .r em{font-style:normal;font-weight:700;color:var(--ink)}
 .rec small{display:block;color:var(--muted);font-size:12px}
 .nbtag{display:inline-block;font-size:11px;font-weight:700;padding:0 7px;border-radius:20px;background:var(--surface2);color:var(--muted);border:1px solid var(--line);margin-left:4px}
+.nums input.autop{background:var(--p1-weak);color:var(--p1);font-weight:700;border-color:transparent}
+.nums label span .ap{border:0;background:var(--p1);color:var(--surface);font-size:10.5px;font-weight:700;border-radius:20px;padding:0 6px;margin-left:3px;line-height:16px;vertical-align:1px}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 </style>
 </head>
@@ -324,6 +328,7 @@ textarea{width:100%;min-height:130px;background:var(--surface2);border:1px solid
     <div class="acts2"><button class="btn" id="askCancel">취소</button><button class="btn primary" id="askOk">확인</button></div>
   </div>
 </div>
+<div id="dlBox" hidden></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -542,6 +547,7 @@ function renderInput(){
     <div class="toolbar"><button class="btn full" data-act="copyprev">지난 학기 교재 제목·단가 불러오기</button></div>
     ${list.map(s => card(s,key)).join('') || '<div class="empty">이 해 수업 학교가 없어요. 학교 탭에서 넣어 주세요.</div>'}
     ${dataPanel()}`;
+  buildDatalists();
   updateCalc();
 }
 function card(s,key){
@@ -569,9 +575,11 @@ function rowHtml(key,sid,p,i,r){
   const fx = orderFx(r);
   const num = (f,label) => (f === 'order' && fx)
     ? `<label><span>${label}</span><input type="text" inputmode="numeric" class="fx" ${d} data-f="${f}" data-fx="1" value="${esc(fx)}" title="${esc(fx)}권"></label>`
+    : (f === 'price' && r.autoPrice && n(r.price))
+    ? `<label><span>단가 <button type="button" class="ap" data-act="pedit" ${d} aria-label="자동으로 넣은 단가 수정">수정</button></span><input type="text" inputmode="numeric" class="autop" ${d} data-f="${f}" value="${fmtIn(r[f])}" title="지난번 단가를 자동으로 넣었어요"></label>`
     : `<label><span>${label}</span><input type="text" inputmode="numeric" ${d} data-f="${f}" value="${fmtIn(r[f])}"></label>`;
   return `<div class="row">
-    <div class="tline"><input class="title" ${d} data-f="title" value="${esc(r.title)}" placeholder="교재 제목" aria-label="교재 제목" enterkeyhint="next">
+    <div class="tline"><input class="title" ${d} data-f="title" list="dl-${p}" autocomplete="off" value="${esc(r.title)}" placeholder="교재 제목 (입력하면 목록이 떠요)" aria-label="교재 제목" enterkeyhint="next">
       <button class="icon" data-act="delrow" ${d} aria-label="이 교재 삭제">×</button></div>
     <div class="nums${fx ? ' wide' : ''}">
       ${num('price','단가(원)')}${num('order','주문')}${num('quote','견적')}
@@ -605,6 +613,34 @@ function updateCalc(){
   const qt = $('#qtotal'); if(qt) qt.textContent = won(c.qamt) + '원';
   const tot = $('#totals');
   if(tot) tot.innerHTML = `<div><small>주문 수량</small><b>${won(c.order)}</b></div><div><small>견적 수량</small><b>${won(c.quote)}</b></div><div class="r"><small>반품 수량</small><b>${won(c.ret)}</b></div><div class="r"><small>반품 금액</small><b>${won(c.amt)}</b></div>`;
+}
+
+/* 교재 제목 추천 목록: 올해 입력한 교재가 맨 위, 그다음 최근 5년 교재 (1부·2부 따로) */
+function titleSuggestions(p){
+  const seen = new Map();
+  for(let k = 0; k <= 5; k++){
+    const y = cur.year - k;
+    SEMS.forEach(sm => { const t = state.terms[`${y}-${sm}`]; if(!t) return;
+      Object.values(t).forEach(d => (d?.[p]||[]).forEach(r => {
+        const title = (r.title||'').trim(); if(!title) return;
+        const key = normT(title), score = (k === 0 ? 100 : 0) + (5 - k);
+        const e = seen.get(key);
+        if(!e) seen.set(key, { title, price:r.price, score, cnt:1 });
+        else { e.cnt++; if(score > e.score || (!n(e.price) && n(r.price))){ e.score = Math.max(e.score, score); if(n(r.price)) e.price = r.price; } }
+      }));
+    });
+  }
+  return [...seen.values()].sort((a,b) => b.score - a.score || b.cnt - a.cnt || a.title.localeCompare(b.title,'ko'));
+}
+function buildDatalists(){
+  $('#dlBox').innerHTML = PARTS.map(([p]) => `<datalist id="dl-${p}">${titleSuggestions(p).map(x =>
+    `<option value="${esc(x.title)}"${n(x.price) ? ` label="${won(n(x.price))}원"` : ''}></option>`).join('')}</datalist>`).join('');
+}
+// 고른 교재의 최근 단가 (1부·2부 모두에서 찾기)
+function lastPrice(title){
+  const key = normT(title);
+  for(const [p] of PARTS){ const hit = titleSuggestions(p).find(x => normT(x.title) === key && n(x.price)); if(hit) return hit.price; }
+  return '';
 }
 
 function renderSummary(){
@@ -928,6 +964,11 @@ document.addEventListener('click', async e => {
     d.off[part] = true; save(); render();
   }
   else if(a === 'grade') openGradeSheet(sid, b.dataset.y, part);
+  else if(a === 'pedit'){
+    const r = sd(sid,key)[part][idx]; delete r.autoPrice; save(true); render();
+    const el = document.querySelector(`input[data-f="price"][data-key="${key}"][data-sid="${sid}"][data-part="${part}"][data-idx="${idx}"]`);
+    if(el){ el.focus(); el.select(); }
+  }
   else if(a === 'memo'){ const r = sd(sid,key)[part][idx]; r.memo = r.memo || ''; hide(r,'_memoOpen',true); render();
     const el = document.querySelector(`input.memo[data-key="${key}"][data-sid="${sid}"][data-part="${part}"][data-idx="${idx}"]`); if(el) el.focus(); }
   else if(a === 'mvopen') openMoveSheet(key, sid, part, idx);
@@ -959,7 +1000,7 @@ document.addEventListener('click', async e => {
     if(t && Object.values(t).some(sdHas) && !await ask('이번 학기 교재 제목·단가를 지난 학기 것으로 바꿀까요?\n수량은 그대로 둬요.', { ok:'불러오기' })) return;
     yearSchools(cur.year).forEach(s => { const src = pt[s.id]; if(!src) return; const dst = sd(s.id);
       PARTS.forEach(([p]) => {
-        dst[p] = (src[p]||[]).map((r,i) => ({ title:r.title, price:r.price, order:dst[p][i]?.order ?? '', quote:dst[p][i]?.quote ?? '' }));
+        dst[p] = (src[p]||[]).map((r,i) => ({ title:r.title, price:r.price, ...(n(r.price) ? { autoPrice:true } : {}), order:dst[p][i]?.order ?? '', quote:dst[p][i]?.quote ?? '' }));
         if(!dst[p].length) dst[p] = [blank()];
         if(src.off?.[p]) dst.off[p] = true; else delete dst.off[p];
         if(src.names?.[p]) dst.names[p] = src.names[p]; else delete dst.names[p];
@@ -1028,13 +1069,19 @@ document.addEventListener('input', e => {
       v = v.replace(/[^0-9]/g,'');
       el.value = fmtIn(v);
     }
-    sd(el.dataset.sid, el.dataset.key)[el.dataset.part][+el.dataset.idx][el.dataset.f] = v;
+    const row = sd(el.dataset.sid, el.dataset.key)[el.dataset.part][+el.dataset.idx];
+    row[el.dataset.f] = v;
+    if(el.dataset.f === 'price' && row.autoPrice){ delete row.autoPrice; el.classList.remove('autop'); el.parentElement.querySelector('.ap')?.remove(); }
     save(true); updateCalc();
   }
   else if(el.dataset.rename){ const s = state.schools.find(x => x.id === el.dataset.rename); if(s){ s.name = el.value.trim() || s.name; save(true); } }
 });
 document.addEventListener('change', e => {
-  if(e.target.dataset && e.target.dataset.f === 'title' && cur.view === 'input') render();   // 이동 연결(같은 제목) 다시 계산
+  if(e.target.dataset && e.target.dataset.f === 'title' && cur.view === 'input'){
+    const el = e.target, r = sd(el.dataset.sid, el.dataset.key)[el.dataset.part][+el.dataset.idx];
+    if(r.title && (!n(r.price) || r.autoPrice)){ const pr = lastPrice(r.title); if(pr){ r.price = String(n(pr)); r.autoPrice = true; save(true); toast(`지난번 단가 ${won(n(pr))}원을 넣었어요. 올랐으면 ‘수정’을 누르세요`); } else if(r.autoPrice){ r.price = ''; delete r.autoPrice; save(true); } }
+    render();   // 이동 연결(같은 제목)·추천 목록 다시 계산
+  }
   if(e.target.dataset && e.target.dataset.f === 'memo' && !e.target.value.trim()){ const r = sd(e.target.dataset.sid, e.target.dataset.key)[e.target.dataset.part][+e.target.dataset.idx]; delete r.memo; save(true); render(); }
   if(e.target.id === 'histSchool'){ cur.hs = e.target.value; save(true); renderHistory(); }
   if(e.target.id === 'gradeSel'){ cur.grade = e.target.value; save(true); renderHistory(); }

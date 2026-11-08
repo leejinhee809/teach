@@ -1,7 +1,7 @@
 /* 수업내용 PWA 서비스 워커
    - 앱 파일을 저장해 두고 인터넷이 없어도 열리게 함
    - 앱을 고쳐서 다시 올릴 때는 VERSION 숫자를 올려 주세요 (예: v2) */
-const VERSION = 'v1';
+const VERSION = 'v3';
 const CACHE = `sueopnaeyong-${VERSION}`;
 const SHELL = ['./', './index.html', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-192.png', './icons/maskable-512.png',
