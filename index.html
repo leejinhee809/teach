@@ -24,7 +24,7 @@
   --head:#ebe5fc; --head-text:#2a2640; --chip:rgba(124,107,214,.12);
   --ink:#7c6bd6; --ink-text:#ffffff; --hi:#d9f2e8; --hi-text:#1f4a3b;
   --ret:#d0517f; --ret-weak:#fdeaf1; --on-ret:#ffffff; --warn:#c07a2c; --warn-weak:#fff1e2;
-  --p1:#3f86c7; --p1-weak:#e6f1fb; --p2:#a8801e; --p2-weak:#fbf3dc;
+  --p1:#3f86c7; --p1-weak:#e6f1fb; --p2:#a8801e; --p2-weak:#fbf3dc; --p3:#2f9a78; --p3-weak:#e1f5ee;
   --shadow:0 2px 10px rgba(80,60,160,.06);
   --nav-h:62px;
   color-scheme:light;
@@ -38,7 +38,7 @@
     --head:#24233a; --head-text:#eceaf6; --chip:rgba(255,255,255,.07);
     --ink:#c3b5ff; --ink-text:#1f1b35; --hi:#b8ead6; --hi-text:#173a2e;
     --ret:#f7a8c4; --ret-weak:rgba(247,168,196,.13); --on-ret:#331523; --warn:#f8cc9a; --warn-weak:rgba(248,204,154,.13);
-    --p1:#9fd0f7; --p1-weak:rgba(159,208,247,.13); --p2:#f5dc9a; --p2-weak:rgba(245,220,154,.13);
+    --p1:#9fd0f7; --p1-weak:rgba(159,208,247,.13); --p2:#f5dc9a; --p2-weak:rgba(245,220,154,.13); --p3:#a8e6cf; --p3-weak:rgba(168,230,207,.13);
     --shadow:none;
     color-scheme:dark;
   }
@@ -48,7 +48,7 @@
   --head:#24233a; --head-text:#eceaf6; --chip:rgba(255,255,255,.07);
   --ink:#c3b5ff; --ink-text:#1f1b35; --hi:#b8ead6; --hi-text:#173a2e;
   --ret:#f7a8c4; --ret-weak:rgba(247,168,196,.13); --on-ret:#331523; --warn:#f8cc9a; --warn-weak:rgba(248,204,154,.13);
-  --p1:#9fd0f7; --p1-weak:rgba(159,208,247,.13); --p2:#f5dc9a; --p2-weak:rgba(245,220,154,.13);
+  --p1:#9fd0f7; --p1-weak:rgba(159,208,247,.13); --p2:#f5dc9a; --p2-weak:rgba(245,220,154,.13); --p3:#a8e6cf; --p3-weak:rgba(168,230,207,.13);
   --shadow:none;
   color-scheme:dark;
 }
@@ -266,6 +266,17 @@ textarea{width:100%;min-height:130px;background:var(--surface2);border:1px solid
 .nbtag{display:inline-block;font-size:11px;font-weight:700;padding:0 7px;border-radius:20px;background:var(--surface2);color:var(--muted);border:1px solid var(--line);margin-left:4px}
 .nums input.autop{background:var(--p1-weak);color:var(--p1);font-weight:700;border-color:transparent}
 .nums label span .ap{border:0;background:var(--p1);color:var(--surface);font-size:10.5px;font-weight:700;border-radius:20px;padding:0 6px;margin-left:3px;line-height:16px;vertical-align:1px}
+/* 3부 이상 */
+.part.p3,.part.p4,.part.p5,.part.p6{border-left-color:var(--p3);border-top:1px dashed var(--line)}
+.p3 .plabel,.p4 .plabel,.p5 .plabel,.p6 .plabel{background:var(--p3-weak);color:var(--p3)}
+.tag.p3,.tag.p4,.tag.p5,.tag.p6{background:var(--p3-weak);color:var(--p3)}
+.hy .yg.p3 b,.hy .yg.p4 b,.hy .yg.p5 b,.hy .yg.p6 b{color:var(--p3)}
+.addpart{display:block;width:calc(100% - 24px);margin:8px 12px 12px;border:1.5px dashed var(--line);background:none;border-radius:12px;padding:9px;color:var(--muted);font-weight:700;font-size:14px}
+/* 학교 고르기 드롭다운: 색 채운 버튼 */
+.selwrap{position:relative;margin-bottom:10px}
+.selwrap select{appearance:none;-webkit-appearance:none;background:var(--ink);color:var(--ink-text);border:0;font-weight:700;font-size:16px;padding:11px 42px 11px 14px;min-height:46px;border-radius:12px;box-shadow:var(--shadow)}
+.selwrap::after{content:"";position:absolute;right:16px;top:50%;width:9px;height:9px;border-right:2.5px solid var(--ink-text);border-bottom:2.5px solid var(--ink-text);transform:translateY(-70%) rotate(45deg);pointer-events:none}
+.selwrap select option{background:var(--surface);color:var(--text);font-weight:500}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 </style>
 </head>
@@ -377,14 +388,23 @@ const blank = () => ({ title:'', price:'', order:'', quote:'' });
 const tKey = (y=cur.year, s=cur.sem) => `${y}-${s}`;
 const prevKey = () => cur.sem === 2 ? tKey(cur.year,1) : tKey(cur.year-1,2);
 const PARTS = [['p1','1부'],['p2','2부']];
+const plab = p => (+String(p).slice(1)) + '부';                         // p3 → "3부"
+const pnum = p => +String(p).slice(1);
+// 그 학교·학기의 부 목록 (기본 1부·2부, 추가·삭제 가능)
+function partsOf(d){ return (d && Array.isArray(d.parts) ? d.parts : ['p1','p2']).map(p => [p, plab(p)]); }
+// 저장된 모든 부 이름 (추천 목록·단가 찾기용)
+// 비어 있는 가장 작은 번호 (2부를 지웠다가 다시 추가하면 2부)
+function nextPart(d){ const keys = partsOf(d).map(([p]) => p); let i = 1; while(keys.includes('p'+i)) i++; return 'p'+i; }
+function allPartKeys(){ const set = new Set(['p1','p2']);
+  Object.values(state.terms).forEach(t => Object.values(t).forEach(d => partsOf(d).forEach(([p]) => set.add(p))));
+  return [...set].sort((a,b) => pnum(a) - pnum(b)); }
 const SEMS = [1,2];
 
 function sd(sid, key=tKey()){
   const t = state.terms[key] || (state.terms[key] = {});
   if(!t[sid]) t[sid] = { p1:[blank()], p2:[blank()] };
   const d = t[sid]; d.off = d.off || {}; d.names = d.names || {};
-  if(!d.p1 || !d.p1.length) d.p1 = [blank()];
-  if(!d.p2 || !d.p2.length) d.p2 = [blank()];
+  partsOf(d).forEach(([p]) => { if(!d[p] || !d[p].length) d[p] = [blank()]; });
   return d;
 }
 const pname = (d,p,def) => (d && d.names && d.names[p]) || def;
@@ -418,8 +438,8 @@ function gradeBtn(sid,y,p,label){ const g = gradesOf(sid,y,p);
   if(moved) try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
 })();
 function rowHas(r){ return r.title || r.price || r.order || r.quote; }
-function sdHas(d){ return !!d && PARTS.some(([p]) => !isOff(d,p) && (d[p]||[]).some(rowHas)); }
-function activeRows(d){ return d ? PARTS.flatMap(([p]) => isOff(d,p) ? [] : (d[p]||[])) : []; }
+function sdHas(d){ return !!d && partsOf(d).some(([p]) => !isOff(d,p) && (d[p]||[]).some(rowHas)); }
+function activeRows(d){ return d ? partsOf(d).flatMap(([p]) => isOff(d,p) ? [] : (d[p]||[])) : []; }
 /* 이동: 보낸 학교 교재 줄에 r.moves = [{id,to,part,qty,date,note}] 저장.
    받는 학교는 같은 학기·같은 반의 같은 제목 교재 줄에서 주문 수량에 자동으로 더해짐 */
 const normT = t => (t||'').replace(/\s+/g,'').toLowerCase();
@@ -427,8 +447,8 @@ const outOf = r => (r.moves||[]).reduce((a,m) => a + n(m.qty), 0);
 const inOf  = r => r.inQty ?? r._in ?? 0;
 const hide = (o,k,v) => Object.defineProperty(o, k, { value:v, writable:true, configurable:true, enumerable:false }); // 저장 파일에는 안 들어감
 function annotate(){
-  Object.values(state.terms).forEach(t => Object.values(t).forEach(d => PARTS.forEach(([p]) => (d?.[p]||[]).forEach(r => { hide(r,'_in',0); hide(r,'_inList',[]); }))));
-  Object.entries(state.terms).forEach(([key,t]) => Object.entries(t).forEach(([sid,d]) => PARTS.forEach(([p]) => (d?.[p]||[]).forEach(r => (r.moves||[]).forEach(m => {
+  Object.values(state.terms).forEach(t => Object.values(t).forEach(d => partsOf(d).forEach(([p]) => (d?.[p]||[]).forEach(r => { hide(r,'_in',0); hide(r,'_inList',[]); }))));
+  Object.entries(state.terms).forEach(([key,t]) => Object.entries(t).forEach(([sid,d]) => partsOf(d).forEach(([p]) => (d?.[p]||[]).forEach(r => (r.moves||[]).forEach(m => {
     const dest = (t[m.to]?.[m.part]||[]).find(x => normT(x.title) && normT(x.title) === normT(r.title));
     hide(m,'_lost', !dest || isOff(t[m.to], m.part));
     if(dest && !m._lost){ dest._in += n(m.qty); dest._inList.push({ from:sid, qty:n(m.qty), date:m.date, note:m.note }); }
@@ -499,7 +519,7 @@ function termRows(key){
   const t = state.terms[key]; const out = [];
   if(!t) return out;
   state.schools.forEach(s => { const d = t[s.id]; if(!d) return;
-    PARTS.forEach(([p,def]) => { if(isOff(d,p)) return;
+    partsOf(d).forEach(([p,def]) => { if(isOff(d,p)) return;
       (d[p]||[]).forEach(r => { if(rowHas(r)) out.push({ school:s.name, part:p, label:pname(d,p,def), ...r, sid:s.id, inQty:r._in||0, inList:r._inList||[] }); }); });
   });
   return out;
@@ -540,10 +560,10 @@ function renderInput(){
   m.innerHTML = `
     <div class="bigsum"><small>${cur.year}년 ${cur.sem}학기 견적서 교재비 합계</small><b id="qtotal">0원</b></div>
     <div class="totals" id="totals"></div>
-    <select class="filter" id="schoolFilter" aria-label="학교 골라 보기">
+    <div class="selwrap"><select class="filter" id="schoolFilter" aria-label="학교 골라 보기">
       <option value="all">전체 학교 보기 (${all.length}곳)</option>
       ${all.map(s => `<option value="${s.id}" ${s.id===cur.fs?'selected':''}>${esc(s.name)}</option>`).join('')}
-    </select>
+    </select></div>
     <div class="toolbar"><button class="btn full" data-act="copyprev">지난 학기 교재 제목·단가 불러오기</button></div>
     ${list.map(s => card(s,key)).join('') || '<div class="empty">이 해 수업 학교가 없어요. 학교 탭에서 넣어 주세요.</div>'}
     ${dataPanel()}`;
@@ -558,15 +578,16 @@ function card(s,key){
       <svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
     </button>
     <div class="card-body">
-      ${PARTS.map(([p,def]) => { const nm = pname(d,p,def); const k = `data-key="${key}" data-sid="${s.id}" data-part="${p}"`;
+      ${partsOf(d).map(([p,def]) => { const nm = pname(d,p,def); const k = `data-key="${key}" data-sid="${s.id}" data-part="${p}"`;
         if(isOff(d,p)) return `<div class="part ${p} off"><span>${esc(nm)} 수업 없음</span><button class="pbtn" data-act="parton" ${k}>다시 추가</button></div>`;
         return `<div class="part ${p}">
           <div class="phead"><span class="plabel">${esc(nm)}</span>${gradeBtn(s.id,cur.year,p)}<span class="sp"></span>
             <button class="pbtn" data-act="partname" ${k}>수정</button>
             <button class="pbtn del" data-act="partoff" ${k}>삭제</button></div>
           ${d[p].map((r,i) => rowHtml(key,s.id,p,i,r)).join('')}
-          ${p === 'p2' ? `<button class="link" data-act="addrow" ${k}>+ ${esc(nm)} 교재 추가</button>` : ''}
+          ${p !== 'p1' ? `<button class="link" data-act="addrow" ${k}>+ ${esc(nm)} 교재 추가</button>` : ''}
         </div>`; }).join('')}
+      <button class="addpart" data-act="partadd" data-key="${key}" data-sid="${s.id}">+ ${plab(nextPart(d))} 추가</button>
     </div>
   </section>`;
 }
@@ -585,7 +606,7 @@ function rowHtml(key,sid,p,i,r){
       ${num('price','단가(원)')}${num('order','주문')}${num('quote','견적')}
       <div class="ret" id="r-${key}-${sid}-${p}-${i}"><span>반품</span><div><b>0</b><small></small></div></div>
     </div>
-    ${(r.moves||[]).map(m => `<div class="mv ${m._lost?'lost':''}"><div class="t">↪ ${esc(sName(m.to))} ${m.part==='p1'?'1부':'2부'}로 <b>${won(n(m.qty))}권</b> 이동 <small>${mdate(m.date)}</small>${m.note?`<br><small>${esc(m.note)}</small>`:''}${m._lost?`<br><small>받는 학교에 같은 제목 교재가 없어요. 제목을 똑같이 맞춰 주세요</small>`:''}</div><button data-act="mvdel" ${d} data-mid="${m.id}" aria-label="이동 기록 삭제">×</button></div>`).join('')}
+    ${(r.moves||[]).map(m => `<div class="mv ${m._lost?'lost':''}"><div class="t">↪ ${esc(sName(m.to))} ${plab(m.part)}로 <b>${won(n(m.qty))}권</b> 이동 <small>${mdate(m.date)}</small>${m.note?`<br><small>${esc(m.note)}</small>`:''}${m._lost?`<br><small>받는 학교에 같은 제목 교재가 없어요. 제목을 똑같이 맞춰 주세요</small>`:''}</div><button data-act="mvdel" ${d} data-mid="${m.id}" aria-label="이동 기록 삭제">×</button></div>`).join('')}
     ${(r._inList||[]).map(m => `<div class="mv in"><div class="t">↩ ${esc(sName(m.from))}에서 <b>${won(m.qty)}권</b> 받음 <small>${mdate(m.date)} · 주문 수량에 포함</small>${m.note?`<br><small>${esc(m.note)}</small>`:''}</div></div>`).join('')}
     ${r.memo !== undefined && r.memo !== null && (r.memo !== '' || r._memoOpen) ? `<input class="memo" ${d} data-f="memo" value="${esc(r.memo)}" placeholder="메모 (예: 11/8 교동에서 2권 더 요청)">` : ''}
     <div class="rowx">
@@ -599,7 +620,7 @@ function updateCalc(){
   const key = tKey(); const all = [];
   visibleSchools(key).forEach(s => {
     const d = sd(s.id, key); const rows = activeRows(d); all.push(...rows);
-    PARTS.forEach(([p]) => { if(isOff(d,p)) return; d[p].forEach((r,i) => {
+    partsOf(d).forEach(([p]) => { if(isOff(d,p)) return; d[p].forEach((r,i) => {
       const el = document.getElementById(`r-${key}-${s.id}-${p}-${i}`); if(!el) return;
       const q = n(r.order) + inOf(r) - n(r.quote) - outOf(r);
       el.classList.toggle('neg', q < 0);
@@ -633,13 +654,13 @@ function titleSuggestions(p){
   return [...seen.values()].sort((a,b) => b.score - a.score || b.cnt - a.cnt || a.title.localeCompare(b.title,'ko'));
 }
 function buildDatalists(){
-  $('#dlBox').innerHTML = PARTS.map(([p]) => `<datalist id="dl-${p}">${titleSuggestions(p).map(x =>
+  $('#dlBox').innerHTML = allPartKeys().map(p => `<datalist id="dl-${p}">${titleSuggestions(p).map(x =>
     `<option value="${esc(x.title)}"${n(x.price) ? ` label="${won(n(x.price))}원"` : ''}></option>`).join('')}</datalist>`).join('');
 }
 // 고른 교재의 최근 단가 (1부·2부 모두에서 찾기)
 function lastPrice(title){
   const key = normT(title);
-  for(const [p] of PARTS){ const hit = titleSuggestions(p).find(x => normT(x.title) === key && n(x.price)); if(hit) return hit.price; }
+  for(const p of allPartKeys()){ const hit = titleSuggestions(p).find(x => normT(x.title) === key && n(x.price)); if(hit) return hit.price; }
   return '';
 }
 
@@ -681,17 +702,22 @@ function renderHistory(){
   const norm = t => (t||'').replace(/\s+/g,'').toLowerCase();
   const dOf = (sid,y,sem) => state.terms[`${y}-${sem}`]?.[sid];
   const titles = (d,p) => d && !isOff(d,p) ? (d[p]||[]).map(r => (r.title||'').trim()).filter(Boolean) : [];
+  // 이 학교가 그 해에 운영한 부 (1·2학기 합침), 표에는 5년 중 가장 많은 부까지 열을 만듦
+  const partsAt = (sid,y) => { const set = new Set(); SEMS.forEach(sm => { const d = dOf(sid,y,sm); if(d) partsOf(d).forEach(([p]) => set.add(p)); });
+    Object.keys(state.yg?.[y]?.[sid] || {}).forEach(p => set.add(p)); if(!set.size){ set.add('p1'); set.add('p2'); }
+    return [...set].sort((a,b) => pnum(a) - pnum(b)).map(p => [p, plab(p)]); };
+  const cols = [...new Set(years.flatMap(y => partsAt(s.id,y).map(([p]) => p)))].sort((a,b) => pnum(a) - pnum(b));
   // 이 학교 5년간 사용 횟수 (중복 표시용)
   const count = {};
-  years.forEach(y => SEMS.forEach(sem => PARTS.forEach(([p]) => titles(dOf(s.id,y,sem),p).forEach(t => { const k = norm(t); count[k] = (count[k]||0) + 1; }))));
+  years.forEach(y => SEMS.forEach(sem => cols.forEach(p => titles(dOf(s.id,y,sem),p).forEach(t => { const k = norm(t); count[k] = (count[k]||0) + 1; }))));
   const cell = (y,sem,p) => {
     const key = `${y}-${sem}`, d = dOf(s.id,y,sem);
-    if(isOff(d,p)) return `<span class="none">수업 없음</span>`;
+    if(isOff(d,p) || (d && !partsOf(d).some(([q]) => q === p))) return `<span class="none">${d ? '수업 없음' : '-'}</span>`;
     const list = titles(d,p);
     return `${list.length ? list.map(t => esc(t)).join('<br>') : '<span class="none">-</span>'}`;
   };
   const rows = years.map(y => SEMS.map(sem =>
-    `<tr class="${sem===1?'s1':'s2'}">${sem===1?`<td class="hy" rowspan="2">${y}년${gradeBtn(s.id,y,'p1','1부')}${gradeBtn(s.id,y,'p2','2부')}</td>`:''}<td class="sem">${sem}학기</td><td>${cell(y,sem,'p1')}</td><td>${cell(y,sem,'p2')}</td></tr>`
+    `<tr class="${sem===1?'s1':'s2'}">${sem===1?`<td class="hy" rowspan="2">${y}년${partsAt(s.id,y).map(([p,lb]) => gradeBtn(s.id,y,p,lb)).join('')}</td>`:''}<td class="sem">${sem}학기</td>${cols.map(p => `<td>${cell(y,sem,p)}</td>`).join('')}</tr>`
   ).join('')).join('');
 
   // 학년별 사용 교재: 고른 년도·학년 학생들이 지난 학년에 배운 교재 (같은 학교, 최대 5년)
@@ -702,10 +728,10 @@ function renderHistory(){
     const pastTitles = new Set();
     for(let k = Math.min(g-1, 4); k >= 0; k--){          // 오래된 해 → 올해 순서
       const y = gy - k, gr = g - k;
-      const parts = PARTS.filter(([p]) => gradesOf(s.id,y,p).includes(gr));
+      const parts = partsAt(s.id,y).filter(([p]) => gradesOf(s.id,y,p).includes(gr));
       const nowCls = k === 0 ? ' now' : '';
       const head = `<h4>${y}년 · ${gr}학년 ${k === 0 ? '<small>(선택한 해)</small>' : ''}`;
-      if(!PARTS.some(([p]) => gradesOf(s.id,y,p).length)){
+      if(!partsAt(s.id,y).some(([p]) => gradesOf(s.id,y,p).length)){
         blocks.push(`<div class="cohort${nowCls}">${head}</h4><div class="ln none">이 해 학년이 아직 없어요. 위 표 ${y}년 칸에서 1부·2부 학년을 적어 주세요.</div></div>`); continue;
       }
       if(!parts.length){ blocks.push(`<div class="cohort${nowCls}">${head}</h4><div class="ln none">${gr}학년 수업 없음</div></div>`); continue; }
@@ -728,11 +754,11 @@ function renderHistory(){
   m.innerHTML = `
     <div class="panel"><h3>학교별 수업 내용</h3>
       <p>${cur.year-4}년~${cur.year}년(5년) 동안 쓴 교재예요. 1부·2부의 학년 버튼을 눌러 학년을 적을 수 있어요.</p>
-      <select id="histSchool" aria-label="학교 선택">${state.schools.map(x => `<option value="${x.id}" ${x.id===cur.hs?'selected':''}>${esc(x.name)}</option>`).join('')}</select>
+      <div class="selwrap" style="margin:0"><select id="histSchool" aria-label="학교 선택">${state.schools.map(x => `<option value="${x.id}" ${x.id===cur.hs?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div>
     </div>
     <div class="tablewrap" style="margin-bottom:12px"><table class="htable">
-      <colgroup><col class="c-yr"><col class="c-sem"><col><col></colgroup>
-      <thead><tr><th class="hy">년도</th><th class="sem">학기</th><th><span class="tag p1">1부</span></th><th><span class="tag p2">2부</span></th></tr></thead>
+      <colgroup><col class="c-yr"><col class="c-sem">${cols.map(() => '<col>').join('')}</colgroup>
+      <thead><tr><th class="hy">년도</th><th class="sem">학기</th>${cols.map(p => `<th><span class="tag ${p}">${plab(p)}</span></th>`).join('')}</tr></thead>
       <tbody>${rows}</tbody></table></div>
     <div class="panel"><h3>학년별 이전 교재 (${esc(s.name)})</h3>
       <div class="gctl">
@@ -862,7 +888,7 @@ const askText = (msg, def) => dialog(msg, String(def ?? ''), { ok:'저장' });
 let gPending = null;
 function openGradeSheet(sid, y, part){
   gPending = { sid, y, part };
-  const g = gradesOf(sid, y, part), def = PARTS.find(x => x[0]===part)[1];
+  const g = gradesOf(sid, y, part), def = plab(part);
   const school = state.schools.find(x => x.id === sid);
   $('#gsTitle').textContent = `${school ? school.name + ' · ' : ''}${y}년 ${def} 학년`;
   const opts = (sel, empty) => `<option value="">${empty}</option>` + [1,2,3,4,5,6].map(i => `<option value="${i}" ${i===sel?'selected':''}>${i}</option>`).join('');
@@ -884,14 +910,19 @@ function openMoveSheet(key, sid, part, idx){
   mvPending = { key, sid, part, idx };
   const left = n(r.order) + inOf(r) - n(r.quote) - outOf(r);
   $('#mvTitle').textContent = `${r.title} → 다른 학교로`;
-  $('#mvSub').textContent = `${sName(sid)} · ${part==='p1'?'1부':'2부'} · 지금 남는 수량 ${won(left)}권. 받는 학교 주문 수량에 자동으로 더해져요.`;
+  $('#mvSub').textContent = `${sName(sid)} · ${plab(part)} · 지금 남는 수량 ${won(left)}권. 받는 학교 주문 수량에 자동으로 더해져요.`;
   $('#mvTo').innerHTML = others.map(x => `<option value="${x.id}">${esc(x.name)}</option>`).join('');
-  $('#mvPart').value = part;
+  fillMovePart(part);
   $('#mvQty').value = left > 0 ? String(left) : '';
   const t = new Date(), p2 = v => String(v).padStart(2,'0');
   $('#mvDate').value = `${t.getFullYear()}-${p2(t.getMonth()+1)}-${p2(t.getDate())}`;
   $('#mvNote').value = '';
   $('#moveSheet').hidden = false; $('#mvQty').focus();
+}
+function fillMovePart(want){
+  const to = $('#mvTo').value; const dd = state.terms[mvPending.key]?.[to];
+  const keys = [...new Set([...partsOf(dd).map(([p]) => p), want])].sort((a,b) => pnum(a) - pnum(b));
+  $('#mvPart').innerHTML = keys.map(p => `<option value="${p}" ${p===want?'selected':''}>${plab(p)}</option>`).join('');
 }
 function closeMoveSheet(){ $('#moveSheet').hidden = true; mvPending = null; }
 function saveMove(){
@@ -900,6 +931,7 @@ function saveMove(){
   const to = $('#mvTo').value, tp = $('#mvPart').value;
   // 받는 학교에 같은 제목 교재 줄이 없으면 새로 만듦 (단가 함께 복사)
   const dd = sd(to, key); if(dd.off[tp]) delete dd.off[tp];
+  if(!partsOf(dd).some(([p]) => p === tp)){ dd.parts = [...partsOf(dd).map(([p]) => p), tp].sort((a,b) => pnum(a) - pnum(b)); dd[tp] = [blank()]; }
   if(!dd[tp].some(x => normT(x.title) === normT(r.title))){
     const empty = dd[tp].findIndex(x => !rowHas(x));
     const nr = { title:r.title, price:r.price, order:'', quote:'' };
@@ -909,6 +941,7 @@ function saveMove(){
   closeMoveSheet(); save(); render(); toast(`${sName(to)}로 ${won(qty)}권 이동했어요`);
 }
 $('#moveSheet').addEventListener('click', e => { if(e.target.id === 'moveSheet') closeMoveSheet(); });
+$('#mvTo').addEventListener('change', () => { if(mvPending) fillMovePart($('#mvPart').value || mvPending.part); });
 $('#mvQty').addEventListener('input', e => { e.target.value = e.target.value.replace(/[^0-9]/g,''); });
 
 /* ===== 동작 ===== */
@@ -952,16 +985,25 @@ document.addEventListener('click', async e => {
     save(); render();
   }
   else if(a === 'partname'){
-    const d = sd(sid,key), def = PARTS.find(x => x[0]===part)[1];
+    const d = sd(sid,key), def = plab(part);
     const v = await askText('이 학기에 쓸 이름을 입력하세요 (예: 1부 저학년반)', pname(d,part,def));
     if(v === null) return;
     if(v.trim() && v.trim() !== def) d.names[part] = v.trim(); else delete d.names[part];
     save(); render();
   }
-  else if(a === 'partoff'){
-    const d = sd(sid,key), nm = pname(d,part,PARTS.find(x => x[0]===part)[1]);
-    if(!await ask(`이번 학기에 ${nm} 수업을 하지 않나요?\n${nm}을 삭제하면 합계와 반품 계산에서 빠져요. (입력한 내용은 ‘다시 추가’로 되살릴 수 있어요)`, { ok:'삭제', danger:true })) return;
-    d.off[part] = true; save(); render();
+  else if(a === 'partoff'){   // 부 삭제: 이 학기에서 그 부와 입력 내용을 지움
+    const d = sd(sid,key), nm = pname(d,part,plab(part));
+    const has = (d[part]||[]).some(rowHas);
+    if(!await ask(`이번 학기에서 ${nm}을 삭제할까요?${has ? '\n입력한 교재도 함께 지워져요.' : ''}`, { ok:'삭제', danger:true })) return;
+    d.parts = partsOf(d).map(([p]) => p).filter(p => p !== part);
+    delete d[part]; delete d.off[part]; delete d.names[part];
+    save(); render();
+  }
+  else if(a === 'partadd'){   // 부 추가: 다음 번호(3부, 4부…)
+    const d = sd(sid,key); const keys = partsOf(d).map(([p]) => p);
+    const next = nextPart(d);
+    d.parts = [...keys, next].sort((a,b) => pnum(a) - pnum(b)); d[next] = [blank()];
+    cur.closed[sid] = false; save(true); render(); toast(`${plab(next)}를 추가했어요`);
   }
   else if(a === 'grade') openGradeSheet(sid, b.dataset.y, part);
   else if(a === 'pedit'){
@@ -999,7 +1041,8 @@ document.addEventListener('click', async e => {
     const t = state.terms[tKey()];
     if(t && Object.values(t).some(sdHas) && !await ask('이번 학기 교재 제목·단가를 지난 학기 것으로 바꿀까요?\n수량은 그대로 둬요.', { ok:'불러오기' })) return;
     yearSchools(cur.year).forEach(s => { const src = pt[s.id]; if(!src) return; const dst = sd(s.id);
-      PARTS.forEach(([p]) => {
+      if(Array.isArray(src.parts)){ partsOf(dst).forEach(([p]) => { if(!src.parts.includes(p)) delete dst[p]; }); dst.parts = [...src.parts]; } else delete dst.parts;
+      partsOf(src).forEach(([p]) => { dst[p] = dst[p] || [blank()];
         dst[p] = (src[p]||[]).map((r,i) => ({ title:r.title, price:r.price, ...(n(r.price) ? { autoPrice:true } : {}), order:dst[p][i]?.order ?? '', quote:dst[p][i]?.quote ?? '' }));
         if(!dst[p].length) dst[p] = [blank()];
         if(src.off?.[p]) dst.off[p] = true; else delete dst.off[p];
@@ -1007,7 +1050,7 @@ document.addEventListener('click', async e => {
       });
     });
     const py = prevKey().split('-')[0];
-    if(String(py) !== String(cur.year)) state.schools.forEach(sc => PARTS.forEach(([p]) => {
+    if(String(py) !== String(cur.year)) state.schools.forEach(sc => allPartKeys().forEach(p => {
       const pg = gradesOf(sc.id,py,p); if(pg.length && !gradesOf(sc.id,cur.year,p).length) ygOf(sc.id,cur.year)[p] = [...pg];
     }));
     save(true); toast('지난 학기 교재를 불러왔어요'); render();
@@ -1086,7 +1129,7 @@ document.addEventListener('change', e => {
   if(e.target.id === 'histSchool'){ cur.hs = e.target.value; save(true); renderHistory(); }
   if(e.target.id === 'gradeSel'){ cur.grade = e.target.value; save(true); renderHistory(); }
   if(e.target.id === 'gradeYear'){ cur.gyear = e.target.value; save(true); renderHistory(); }
-  if(e.target.id === 'schoolFilter'){ cur.fs = e.target.value; if(cur.fs !== 'all') cur.closed[cur.fs] = false; save(true); renderInput(); }
+  if(e.target.id === 'schoolFilter'){ cur.fs = e.target.value; if(cur.fs !== 'all') cur.closed[cur.fs] = false; cur.sem = 1; save(true); render(); window.scrollTo(0,0); }
 });
 document.addEventListener('keydown', e => { if(e.key === 'Enter' && e.target.id === 'newSchool') addSchool(false); if(e.key === 'Enter' && e.target.id === 'newSchoolNb') addSchool(true); });
 document.addEventListener('focusin', e => { const el = e.target;
