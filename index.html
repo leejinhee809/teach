@@ -277,6 +277,21 @@ textarea{width:100%;min-height:130px;background:var(--surface2);border:1px solid
 .selwrap select{appearance:none;-webkit-appearance:none;background:var(--ink);color:var(--ink-text);border:0;font-weight:700;font-size:16px;padding:11px 42px 11px 14px;min-height:46px;border-radius:12px;box-shadow:var(--shadow)}
 .selwrap::after{content:"";position:absolute;right:16px;top:50%;width:9px;height:9px;border-right:2.5px solid var(--ink-text);border-bottom:2.5px solid var(--ink-text);transform:translateY(-70%) rotate(45deg);pointer-events:none}
 .selwrap select option{background:var(--surface);color:var(--text);font-weight:500}
+/* 문자전송 탭 */
+.mpart{padding:8px 0 4px;border-top:1px dashed var(--line)}
+.mpart:first-of-type{border-top:0}
+.mrow{display:grid;grid-template-columns:30px 1fr 74px 18px;gap:6px;align-items:center;margin-top:6px}
+.mrow .chk{display:flex;align-items:center;justify-content:center}
+.mrow .chk input{width:22px;height:22px;min-height:0;accent-color:var(--ink)}
+.mrow .mq{text-align:right;font-weight:700}
+.mrow .u{font-size:13px;color:var(--muted)}
+.mrow.offrow .title,.mrow.offrow .mq{opacity:.45}
+.mrow input.chg{background:var(--p1-weak);border-color:var(--p1)}
+.card-head h2 .sent{display:block;font-size:11.5px;font-weight:500;color:var(--p3);margin-top:2px}
+#msgOut{font-family:inherit;font-size:15px;line-height:1.6;min-height:190px;background:var(--surface2)}
+#msgTail{font-family:inherit;font-size:15px;min-height:70px}
+.msgacts{display:grid;grid-template-columns:1.4fr 1fr;gap:8px;margin-top:8px}
+.msgacts a{text-decoration:none;display:flex;align-items:center;justify-content:center}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 </style>
 </head>
@@ -296,6 +311,7 @@ textarea{width:100%;min-height:130px;background:var(--surface2);border:1px solid
   <button data-view="summary"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 10h8M8 14h8M8 18h5"/></svg>정리</button>
   <button data-view="history"><svg viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3V4z"/><path d="M5 17a3 3 0 013-3h11"/></svg>수업 내용</button>
   <button data-view="schools"><svg viewBox="0 0 24 24"><path d="M3 10l9-6 9 6"/><path d="M5 10v9h14v-9"/><path d="M10 19v-5h4v5"/></svg>학교</button>
+  <button data-view="msg"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4V5z"/><path d="M8 9h8M8 12h5"/></svg>문자전송</button>
 </nav>
 <input type="file" id="fileIn" accept=".json,application/json" class="vh" tabindex="-1" aria-hidden="true">
 <div class="sheet" id="gradeSheet" hidden>
@@ -532,7 +548,7 @@ function render(){
   $('#semSeg').hidden = cur.view === 'history' || cur.view === 'schools';
   document.querySelectorAll('#semSeg button').forEach(b => b.classList.toggle('on', +b.dataset.sem === cur.sem));
   document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.view === cur.view));
-  ({ input:renderInput, summary:renderSummary, history:renderHistory, schools:renderSchools })[cur.view]();
+  ({ input:renderInput, summary:renderSummary, msg:renderMsg, history:renderHistory, schools:renderSchools })[cur.view]();
 }
 function addSchoolForm(){
   return `<div class="addform"><input id="newSchool" placeholder="학교 이름" enterkeyhint="done"><button class="btn primary" data-act="addschool">추가</button></div>`;
@@ -574,7 +590,7 @@ function card(s,key){
   const d = sd(s.id, key);
   return `<section class="card ${cur.closed[s.id]?'closed':''}" id="card-${s.id}">
     <button class="card-head" data-act="toggle" data-sid="${s.id}" aria-label="${esc(s.name)} 펼치기/접기">
-      <h2>${esc(s.name)}</h2><span class="card-total" id="ct-${s.id}"></span>
+      <h2>${esc(s.name)}${d.sent && Object.keys(d.sent).length ? `<small class="sent">${Object.entries(MSG_TYPES).filter(([k]) => d.sent[k]).map(([k,v]) => `${v.label} ${mdate(d.sent[k])}`).join(' · ')}</small>` : ''}</h2><span class="card-total" id="ct-${s.id}"></span>
       <svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
     </button>
     <div class="card-body">
@@ -662,6 +678,70 @@ function lastPrice(title){
   const key = normT(title);
   for(const p of allPartKeys()){ const hit = titleSuggestions(p).find(x => normT(x.title) === key && n(x.price)); if(hit) return hit.price; }
   return '';
+}
+
+/* ===== 문자전송: 주문내역 데이터로 교재 주문 문자 만들기 ===== */
+// 조양초·조양 → 조양초등학교 (이미 ○○학교면 그대로)
+const MSG_TYPES = {
+  order: { label:'교재주문',   head:'교재 주문하겠습니다.',    f:'order', q:'주문 수량' },
+  quote: { label:'견적서',     head:'견적서 요청드립니다.',    f:'quote', q:'견적 수량' },
+  tax:   { label:'세금계산서', head:'세금계산서 요청드립니다.', f:'quote', q:'견적 수량' },
+};
+const mtype = () => MSG_TYPES[cur.mtype] ? cur.mtype : 'order';
+function schoolFull(name){ name = (name||'').trim(); return /학교$/.test(name) ? name : name.replace(/\s*(초교|초)$/,'') + '초등학교'; }
+function renderMsg(){
+  const m = $('#main'), key = tKey(), list = yearSchools(cur.year);
+  if(!list.length){ m.innerHTML = `<div class="empty">${cur.year}년 수업 학교가 없어요. 학교 탭에서 추가하세요.</div>`; return; }
+  if(!list.some(x => x.id === cur.ms)) cur.ms = list.some(x => x.id === cur.fs) ? cur.fs : list[0].id;
+  if(cur.msgTail === undefined) cur.msgTail = '감사합니다.';
+  cur.msgOff = cur.msgOff || {};
+  const s = list.find(x => x.id === cur.ms), d = sd(s.id, key);
+  const parts = partsOf(d).filter(([p]) => !isOff(d,p));
+  const T = MSG_TYPES[mtype()], qf = T.f;
+  m.innerHTML = `
+    <div class="selwrap"><select id="msgSchool" aria-label="학교 선택">${list.map(x => `<option value="${x.id}" ${x.id===s.id?'selected':''}>${esc(x.name)}</option>`).join('')}</select></div>
+    <div class="selwrap"><select id="msgType" aria-label="문자 종류">${Object.entries(MSG_TYPES).map(([k,v]) => `<option value="${k}" ${k===mtype()?'selected':''}>${v.label}</option>`).join('')}</select></div>
+    <div class="panel"><h3>${cur.year}년 ${cur.sem}학기 교재 · ${T.q}</h3>
+      ${parts.map(([p,def]) => `<div class="mpart"><span class="plabel">${esc(pname(d,p,def))}</span>
+        ${d[p].map((r,i) => { const id = `${key}|${s.id}|${p}|${i}`, on = !cur.msgOff[id], at = `data-key="${key}" data-sid="${s.id}" data-part="${p}" data-idx="${i}"`;
+          return `<div class="mrow ${on?'':'offrow'}">
+            <label class="chk"><input type="checkbox" data-mchk="${id}" ${on?'checked':''} aria-label="문자에 넣기"></label>
+            <input class="title ${dGet(id,'title') !== undefined && dGet(id,'title') !== (r.title||'') ? 'chg' : ''}" data-md="title" data-mid="${id}" list="dl-${p}" autocomplete="off" value="${esc(dGet(id,'title') ?? r.title)}" placeholder="교재 제목">
+            <input class="mq ${dGet(id,qf) !== undefined && n(dGet(id,qf)) !== n(r[qf]) ? 'chg' : ''}" type="text" inputmode="numeric" data-md="${qf}" data-mid="${id}" value="${fmtIn(dGet(id,qf) ?? r[qf])}" placeholder="수량" aria-label="${T.q}">
+            <span class="u">권</span></div>`; }).join('')}
+      </div>`).join('') || '<p>이 학기에 부가 없어요. 주문내역 탭에서 부를 추가하세요.</p>'}
+    </div>
+    <div class="panel"><h3>덧붙일 말</h3>
+      <textarea id="msgTail" placeholder="예: 3월 4일까지 보내주세요. 감사합니다.">${esc(cur.msgTail)}</textarea>
+    </div>
+    <div class="panel"><h3>문자 내용</h3>
+      <textarea id="msgOut" aria-label="완성된 문자 내용"></textarea>
+      <div class="msgacts">
+        <button class="btn primary" data-act="msgcopy">문자 내용 복사</button>
+        <a class="btn" id="msgSms" href="#">문자 앱 열기</a>
+      </div>
+    </div>`;
+  buildDatalists(); updateMsg();
+}
+/* 문자전송에서 고친 값은 임시 저장(cur.mdraft) → [문자 내용 복사] 눌렀을 때 주문내역에 반영 */
+const dGet = (id,f) => cur.mdraft?.[`${id}|${f}`];
+function buildMsg(){
+  const key = tKey(), s = state.schools.find(x => x.id === cur.ms); if(!s) return '';
+  const d = state.terms[key]?.[s.id]; const lines = [];
+  const qf = MSG_TYPES[mtype()].f;
+  if(d) partsOf(d).forEach(([p,def]) => { if(isOff(d,p)) return; (d[p]||[]).forEach((r,i) => {
+    const id = `${key}|${s.id}|${p}|${i}`;
+    if(cur.msgOff?.[id]) return;
+    const t = String(dGet(id,'title') ?? r.title ?? '').trim(), q = n(dGet(id,qf) ?? r[qf]); if(!t || !q) return;
+    lines.push(`${pname(d,p,def)} ${t} ${won(q)}부`);
+  }); });
+  return [`안녕하세요. ${schoolFull(s.name)} ${MSG_TYPES[mtype()].head}`,
+          lines.length ? `${cur.year}년 ${cur.sem}학기` : '', ...lines, (cur.msgTail||'').trim()].filter(Boolean).join('\n');
+}
+function updateMsg(){
+  const out = $('#msgOut'); if(!out) return;
+  const txt = buildMsg(); out.value = txt;
+  const a = $('#msgSms'); if(a) a.href = 'sms:?&body=' + encodeURIComponent(txt);
 }
 
 function renderSummary(){
@@ -774,8 +854,9 @@ function renderSchools(){
   const mine = yearSchools(y), nb = nbSchools(y);
   const rest = state.schools.filter(sc => !inYear(y, sc.id) && !inNb(y, sc.id));
   const nextCnt = mine.filter(sc => !inYear(ny, sc.id)).length + nb.filter(sc => !inNb(ny, sc.id) && !inYear(ny, sc.id)).length;
-  const rec = state.schools.map(sc => ({ sc, yrs: taughtYears(sc.id) })).filter(x => x.yrs.length)
-    .sort((a,b) => a.yrs[0] - b.yrs[0] || a.sc.name.localeCompare(b.sc.name,'ko'));
+  // 수업 기록: 교재를 주문한 적 있는 학교 먼저, 교재 없이만 수업한 학교는 아래 (각각 시작 년도 순)
+  const rec = state.schools.map(sc => { const yrs = taughtYears(sc.id); return { sc, yrs, nbOnly: yrs.length > 0 && yrs.every(yy => inNb(yy, sc.id)) }; }).filter(x => x.yrs.length)
+    .sort((a,b) => (a.nbOnly - b.nbOnly) || a.yrs[0] - b.yrs[0] || a.sc.name.localeCompare(b.sc.name,'ko'));
   $('#main').innerHTML = `<div class="panel"><h3>${y}년 수업 학교 (${mine.length}곳)</h3>
     ${addSchoolForm()}
     <ul class="slist">${mine.map(sc => `<li>
@@ -945,8 +1026,8 @@ $('#mvTo').addEventListener('change', () => { if(mvPending) fillMovePart($('#mvP
 $('#mvQty').addEventListener('input', e => { e.target.value = e.target.value.replace(/[^0-9]/g,''); });
 
 /* ===== 동작 ===== */
-function copyText(text){
-  const done = () => toast('복사했어요. 엑셀 첫 칸에 붙여넣으세요');
+function copyText(text, okMsg = '복사했어요'){
+  const done = () => toast(okMsg);
   const fallback = () => {
     const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
     try{ document.execCommand('copy'); done(); }catch(e){ toast('복사하지 못했어요', true); }
@@ -1006,6 +1087,21 @@ document.addEventListener('click', async e => {
     cur.closed[sid] = false; save(true); render(); toast(`${plab(next)}를 추가했어요`);
   }
   else if(a === 'grade') openGradeSheet(sid, b.dataset.y, part);
+  else if(a === 'msgcopy'){
+    const t = $('#msgOut').value.trim(); if(!t){ toast('문자 내용이 비어 있어요', true); return; }
+    // 고친 제목·수량을 주문내역에 반영하고, 어떤 문자를 언제 보냈는지 기록
+    const key = tKey(), sidM = cur.ms, d = sd(sidM, key), qf = MSG_TYPES[mtype()].f, pre = `${key}|${sidM}|`;
+    let changed = 0;
+    Object.keys(cur.mdraft || {}).filter(k => k.startsWith(pre)).forEach(k => {
+      const [, , p, i, f] = k.split('|'); const r = d[p]?.[+i]; const v = cur.mdraft[k];
+      if(r && (f === 'title' || f === qf)){ const nv = f === 'title' ? String(v).trim() : String(n(v) || ''); if(String(r[f] ?? '') !== nv){ r[f] = nv; changed++; } }
+      delete cur.mdraft[k];
+    });
+    const td = new Date(), z = v => String(v).padStart(2,'0');
+    d.sent = d.sent || {}; d.sent[mtype()] = `${td.getFullYear()}-${z(td.getMonth()+1)}-${z(td.getDate())}`;
+    save(true); copyText(t, changed ? `복사했어요. 주문내역 ${changed}곳도 바꿨어요` : '문자 내용을 복사했어요. 문자 앱에 붙여넣으세요');
+    renderMsg();
+  }
   else if(a === 'pedit'){
     const r = sd(sid,key)[part][idx]; delete r.autoPrice; save(true); render();
     const el = document.querySelector(`input[data-f="price"][data-key="${key}"][data-sid="${sid}"][data-part="${part}"][data-idx="${idx}"]`);
@@ -1100,7 +1196,7 @@ document.addEventListener('click', async e => {
     const lines = rows.map(r => { const pr = n(r.price), out = outOf(r), q = n(r.order) + inOf(r) - n(r.quote) - out;
       const mvNote = (r.moves||[]).map(m => `${sName(m.to)} ${n(m.qty)}권 이동`).join(', ');
       return [cur.year, cur.sem+'학기', r.school, r.label, clean(r.title), ...[pr, n(r.order), inOf(r), out, n(r.quote), n(r.quote)*pr, q, q*pr].map(won), clean([mvNote, r.memo].filter(Boolean).join(' / '))].join('\t'); });   // 숫자는 1,234 형식 (년도 제외)
-    copyText([head.join('\t'), ...lines].join('\n'));
+    copyText([head.join('\t'), ...lines].join('\n'), '복사했어요. 엑셀 첫 칸에 붙여넣으세요');
   }
 });
 
@@ -1115,8 +1211,17 @@ document.addEventListener('input', e => {
     const row = sd(el.dataset.sid, el.dataset.key)[el.dataset.part][+el.dataset.idx];
     row[el.dataset.f] = v;
     if(el.dataset.f === 'price' && row.autoPrice){ delete row.autoPrice; el.classList.remove('autop'); el.parentElement.querySelector('.ap')?.remove(); }
-    save(true); updateCalc();
+    save(true); updateCalc(); if(cur.view === 'msg') updateMsg();
   }
+  else if(el.dataset.md){   // 문자전송 칸: 아직 주문내역에 저장하지 않음
+    let v = el.value; if(el.dataset.md !== 'title'){ v = v.replace(/[^0-9]/g,''); el.value = fmtIn(v); }
+    cur.mdraft = cur.mdraft || {}; cur.mdraft[`${el.dataset.mid}|${el.dataset.md}`] = v;
+    const [k, sidM, p, i] = el.dataset.mid.split('|'); const r = state.terms[k]?.[sidM]?.[p]?.[+i] || {};
+    el.classList.toggle('chg', el.dataset.md === 'title' ? v !== (r.title||'') : n(v) !== n(r[el.dataset.md]));
+    save(true); updateMsg();
+  }
+  else if(el.id === 'msgTail'){ cur.msgTail = el.value; save(true); updateMsg(); }
+  else if(el.id === 'msgOut'){ /* 직접 고친 문자는 그대로 둠 */ }
   else if(el.dataset.rename){ const s = state.schools.find(x => x.id === el.dataset.rename); if(s){ s.name = el.value.trim() || s.name; save(true); } }
 });
 document.addEventListener('change', e => {
@@ -1127,6 +1232,11 @@ document.addEventListener('change', e => {
   }
   if(e.target.dataset && e.target.dataset.f === 'memo' && !e.target.value.trim()){ const r = sd(e.target.dataset.sid, e.target.dataset.key)[e.target.dataset.part][+e.target.dataset.idx]; delete r.memo; save(true); render(); }
   if(e.target.id === 'histSchool'){ cur.hs = e.target.value; save(true); renderHistory(); }
+  if(e.target.id === 'msgType'){ cur.mtype = e.target.value; save(true); renderMsg(); }
+  if(e.target.id === 'msgSchool'){ cur.ms = e.target.value; cur.sem = 1; save(true); render(); window.scrollTo(0,0); }
+  if(e.target.dataset && e.target.dataset.mchk){ const id = e.target.dataset.mchk; if(e.target.checked) delete cur.msgOff[id]; else cur.msgOff[id] = 1;
+    e.target.closest('.mrow')?.classList.toggle('offrow', !e.target.checked); save(true); updateMsg(); }
+  if(e.target.dataset && e.target.dataset.f === 'title' && cur.view === 'msg'){ buildDatalists(); updateMsg(); }
   if(e.target.id === 'gradeSel'){ cur.grade = e.target.value; save(true); renderHistory(); }
   if(e.target.id === 'gradeYear'){ cur.gyear = e.target.value; save(true); renderHistory(); }
   if(e.target.id === 'schoolFilter'){ cur.fs = e.target.value; if(cur.fs !== 'all') cur.closed[cur.fs] = false; cur.sem = 1; save(true); render(); window.scrollTo(0,0); }
